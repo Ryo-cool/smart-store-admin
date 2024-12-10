@@ -12,18 +12,22 @@ import (
 	"smart-store-admin/backend/models"
 )
 
-type DeliveryRepository struct {
+// DeliveryRepositoryImpl は配送リポジトリの実装です
+type DeliveryRepositoryImpl struct {
 	collection *mongo.Collection
 }
 
-func NewDeliveryRepository(db *mongo.Database) *DeliveryRepository {
-	return &DeliveryRepository{
+// インターフェースが実装されていることを確認
+var _ DeliveryRepository = (*DeliveryRepositoryImpl)(nil)
+
+func NewDeliveryRepository(db *mongo.Database) DeliveryRepository {
+	return &DeliveryRepositoryImpl{
 		collection: db.Collection("deliveries"),
 	}
 }
 
 // Create は新しい配送を作成します
-func (r *DeliveryRepository) Create(ctx context.Context, delivery *models.Delivery) error {
+func (r *DeliveryRepositoryImpl) Create(ctx context.Context, delivery *models.Delivery) error {
 	delivery.CreatedAt = time.Now()
 	delivery.UpdatedAt = time.Now()
 	delivery.Status = models.StatusPending
@@ -38,7 +42,7 @@ func (r *DeliveryRepository) Create(ctx context.Context, delivery *models.Delive
 }
 
 // GetByID は指定されたIDの配送を取得します
-func (r *DeliveryRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*models.Delivery, error) {
+func (r *DeliveryRepositoryImpl) GetByID(ctx context.Context, id primitive.ObjectID) (*models.Delivery, error) {
 	var delivery models.Delivery
 	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&delivery)
 	if err != nil {
@@ -48,7 +52,7 @@ func (r *DeliveryRepository) GetByID(ctx context.Context, id primitive.ObjectID)
 }
 
 // List は配送のリストを取得します
-func (r *DeliveryRepository) List(ctx context.Context, skip, limit int64) ([]*models.Delivery, error) {
+func (r *DeliveryRepositoryImpl) List(ctx context.Context, skip, limit int64) ([]*models.Delivery, error) {
 	opts := options.Find().SetSkip(skip).SetLimit(limit).SetSort(bson.M{"created_at": -1})
 	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
 	if err != nil {
@@ -64,7 +68,7 @@ func (r *DeliveryRepository) List(ctx context.Context, skip, limit int64) ([]*mo
 }
 
 // UpdateStatus は配送のステータスを更新します
-func (r *DeliveryRepository) UpdateStatus(ctx context.Context, id primitive.ObjectID, status models.DeliveryStatus) error {
+func (r *DeliveryRepositoryImpl) UpdateStatus(ctx context.Context, id primitive.ObjectID, status models.DeliveryStatus) error {
 	update := bson.M{
 		"$set": bson.M{
 			"status":     status,
@@ -81,7 +85,7 @@ func (r *DeliveryRepository) UpdateStatus(ctx context.Context, id primitive.Obje
 }
 
 // UpdateLocation はロボット/ドローンの現在位置を更新します
-func (r *DeliveryRepository) UpdateLocation(ctx context.Context, id primitive.ObjectID, location models.Location) error {
+func (r *DeliveryRepositoryImpl) UpdateLocation(ctx context.Context, id primitive.ObjectID, location models.Location) error {
 	update := bson.M{
 		"$set": bson.M{
 			"current_location": location,
@@ -94,7 +98,7 @@ func (r *DeliveryRepository) UpdateLocation(ctx context.Context, id primitive.Ob
 }
 
 // GetActiveDeliveries はアクティブな配送（進行中のもの）を取得します
-func (r *DeliveryRepository) GetActiveDeliveries(ctx context.Context) ([]*models.Delivery, error) {
+func (r *DeliveryRepositoryImpl) GetActiveDeliveries(ctx context.Context) ([]*models.Delivery, error) {
 	filter := bson.M{
 		"status": bson.M{
 			"$in": []models.DeliveryStatus{models.StatusPending, models.StatusInProgress},
@@ -115,7 +119,7 @@ func (r *DeliveryRepository) GetActiveDeliveries(ctx context.Context) ([]*models
 }
 
 // GetDeliveriesByRobot は特定のロボット/ドローンの配送履歴を取得します
-func (r *DeliveryRepository) GetDeliveriesByRobot(ctx context.Context, robotID string) ([]*models.Delivery, error) {
+func (r *DeliveryRepositoryImpl) GetDeliveriesByRobot(ctx context.Context, robotID string) ([]*models.Delivery, error) {
 	cursor, err := r.collection.Find(ctx, bson.M{"robot_id": robotID})
 	if err != nil {
 		return nil, err

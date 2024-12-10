@@ -12,18 +12,22 @@ import (
 	"smart-store-admin/backend/models"
 )
 
-type StoreOperationRepository struct {
+// StoreOperationRepositoryImpl は店舗運営リポジトリの実装です
+type StoreOperationRepositoryImpl struct {
 	collection *mongo.Collection
 }
 
-func NewStoreOperationRepository(db *mongo.Database) *StoreOperationRepository {
-	return &StoreOperationRepository{
+// インターフェースが実装されていることを確認
+var _ StoreOperationRepository = (*StoreOperationRepositoryImpl)(nil)
+
+func NewStoreOperationRepository(db *mongo.Database) StoreOperationRepository {
+	return &StoreOperationRepositoryImpl{
 		collection: db.Collection("store_operations"),
 	}
 }
 
 // Create は新しい店舗運営データを記録します
-func (r *StoreOperationRepository) Create(ctx context.Context, op *models.StoreOperation) error {
+func (r *StoreOperationRepositoryImpl) Create(ctx context.Context, op *models.StoreOperation) error {
 	op.CreatedAt = time.Now()
 	op.UpdatedAt = time.Now()
 	op.Timestamp = time.Now()
@@ -38,7 +42,7 @@ func (r *StoreOperationRepository) Create(ctx context.Context, op *models.StoreO
 }
 
 // GetLatest は最新の店舗運営データを取得します
-func (r *StoreOperationRepository) GetLatest(ctx context.Context) (*models.StoreOperation, error) {
+func (r *StoreOperationRepositoryImpl) GetLatest(ctx context.Context) (*models.StoreOperation, error) {
 	opts := options.FindOne().SetSort(bson.M{"timestamp": -1})
 	var op models.StoreOperation
 	err := r.collection.FindOne(ctx, bson.M{}, opts).Decode(&op)
@@ -49,7 +53,7 @@ func (r *StoreOperationRepository) GetLatest(ctx context.Context) (*models.Store
 }
 
 // GetByTimeRange は指定期間の店舗運営データを取得します
-func (r *StoreOperationRepository) GetByTimeRange(ctx context.Context, start, end time.Time) ([]*models.StoreOperation, error) {
+func (r *StoreOperationRepositoryImpl) GetByTimeRange(ctx context.Context, start, end time.Time) ([]*models.StoreOperation, error) {
 	filter := bson.M{
 		"timestamp": bson.M{
 			"$gte": start,
@@ -72,7 +76,7 @@ func (r *StoreOperationRepository) GetByTimeRange(ctx context.Context, start, en
 }
 
 // UpdateShelfStatus は特定の棚の状態を更新します
-func (r *StoreOperationRepository) UpdateShelfStatus(ctx context.Context, opID primitive.ObjectID, shelfStatus models.ShelfStatus) error {
+func (r *StoreOperationRepositoryImpl) UpdateShelfStatus(ctx context.Context, opID primitive.ObjectID, shelfStatus models.ShelfStatus) error {
 	update := bson.M{
 		"$set": bson.M{
 			"shelves.$[shelf]": shelfStatus,
@@ -91,7 +95,7 @@ func (r *StoreOperationRepository) UpdateShelfStatus(ctx context.Context, opID p
 }
 
 // UpdateCheckoutStatus は特定のレジの状態を更新します
-func (r *StoreOperationRepository) UpdateCheckoutStatus(ctx context.Context, opID primitive.ObjectID, checkoutStatus models.CheckoutStatus) error {
+func (r *StoreOperationRepositoryImpl) UpdateCheckoutStatus(ctx context.Context, opID primitive.ObjectID, checkoutStatus models.CheckoutStatus) error {
 	update := bson.M{
 		"$set": bson.M{
 			"checkouts.$[checkout]": checkoutStatus,
@@ -110,7 +114,7 @@ func (r *StoreOperationRepository) UpdateCheckoutStatus(ctx context.Context, opI
 }
 
 // GetAverageEnergyUsage は指定期間の平均エネルギー使用量を取得します
-func (r *StoreOperationRepository) GetAverageEnergyUsage(ctx context.Context, start, end time.Time) (map[string]float64, error) {
+func (r *StoreOperationRepositoryImpl) GetAverageEnergyUsage(ctx context.Context, start, end time.Time) (map[string]float64, error) {
 	pipeline := mongo.Pipeline{
 		bson.D{
 			primitive.E{Key: "$match", Value: bson.M{

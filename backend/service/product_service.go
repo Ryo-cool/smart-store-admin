@@ -10,11 +10,13 @@ import (
 	"smart-store-admin/backend/repository"
 )
 
+// ProductService は商品サービスを表します
 type ProductService struct {
-	repo *repository.ProductRepository
+	repo repository.ProductRepository
 }
 
-func NewProductService(repo *repository.ProductRepository) *ProductService {
+// NewProductService は新しい商品サービスを作成します
+func NewProductService(repo repository.ProductRepository) *ProductService {
 	return &ProductService{
 		repo: repo,
 	}

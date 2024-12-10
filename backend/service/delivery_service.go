@@ -11,11 +11,13 @@ import (
 	"smart-store-admin/backend/repository"
 )
 
+// DeliveryService は配送サービスを表します
 type DeliveryService struct {
-	repo *repository.DeliveryRepository
+	repo repository.DeliveryRepository
 }
 
-func NewDeliveryService(repo *repository.DeliveryRepository) *DeliveryService {
+// NewDeliveryService は新しい配送サービスを作成します
+func NewDeliveryService(repo repository.DeliveryRepository) *DeliveryService {
 	return &DeliveryService{
 		repo: repo,
 	}

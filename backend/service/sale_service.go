@@ -11,12 +11,14 @@ import (
 	"smart-store-admin/backend/repository"
 )
 
+// SaleService は売上サービスを表します
 type SaleService struct {
-	saleRepo    *repository.SaleRepository
-	productRepo *repository.ProductRepository
+	saleRepo    repository.SaleRepository
+	productRepo repository.ProductRepository
 }
 
-func NewSaleService(saleRepo *repository.SaleRepository, productRepo *repository.ProductRepository) *SaleService {
+// NewSaleService は新しい売上サービスを作成します
+func NewSaleService(saleRepo repository.SaleRepository, productRepo repository.ProductRepository) *SaleService {
 	return &SaleService{
 		saleRepo:    saleRepo,
 		productRepo: productRepo,
@@ -131,7 +133,7 @@ type SalesAnalytics struct {
 	TotalCO2Saved  float64
 }
 
-// getTimeOfDay は現在時刻から時間帯を���定します
+// getTimeOfDay は現在時刻から時間帯を定します
 func getTimeOfDay(t time.Time) string {
 	hour := t.Hour()
 	switch {

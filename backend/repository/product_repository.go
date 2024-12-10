@@ -12,18 +12,22 @@ import (
 	"smart-store-admin/backend/models"
 )
 
-type ProductRepository struct {
+// ProductRepositoryImpl は商品リポジトリの実装です
+type ProductRepositoryImpl struct {
 	collection *mongo.Collection
 }
 
-func NewProductRepository(db *mongo.Database) *ProductRepository {
-	return &ProductRepository{
+// インターフェースが実装されていることを確認
+var _ ProductRepository = (*ProductRepositoryImpl)(nil)
+
+func NewProductRepository(db *mongo.Database) ProductRepository {
+	return &ProductRepositoryImpl{
 		collection: db.Collection("products"),
 	}
 }
 
 // Create は新しい商品を作成します
-func (r *ProductRepository) Create(ctx context.Context, product *models.Product) error {
+func (r *ProductRepositoryImpl) Create(ctx context.Context, product *models.Product) error {
 	product.CreatedAt = time.Now()
 	product.UpdatedAt = time.Now()
 
@@ -37,7 +41,7 @@ func (r *ProductRepository) Create(ctx context.Context, product *models.Product)
 }
 
 // GetByID は指定されたIDの商品を取得します
-func (r *ProductRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*models.Product, error) {
+func (r *ProductRepositoryImpl) GetByID(ctx context.Context, id primitive.ObjectID) (*models.Product, error) {
 	var product models.Product
 	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&product)
 	if err != nil {
@@ -47,7 +51,7 @@ func (r *ProductRepository) GetByID(ctx context.Context, id primitive.ObjectID) 
 }
 
 // List は商品のリストを取得します
-func (r *ProductRepository) List(ctx context.Context, skip, limit int64) ([]*models.Product, error) {
+func (r *ProductRepositoryImpl) List(ctx context.Context, skip, limit int64) ([]*models.Product, error) {
 	opts := options.Find().SetSkip(skip).SetLimit(limit)
 	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
 	if err != nil {
@@ -63,7 +67,7 @@ func (r *ProductRepository) List(ctx context.Context, skip, limit int64) ([]*mod
 }
 
 // Update は商品情報を更新します
-func (r *ProductRepository) Update(ctx context.Context, product *models.Product) error {
+func (r *ProductRepositoryImpl) Update(ctx context.Context, product *models.Product) error {
 	product.UpdatedAt = time.Now()
 
 	filter := bson.M{"_id": product.ID}
@@ -74,13 +78,13 @@ func (r *ProductRepository) Update(ctx context.Context, product *models.Product)
 }
 
 // Delete は商品を削除します
-func (r *ProductRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
+func (r *ProductRepositoryImpl) Delete(ctx context.Context, id primitive.ObjectID) error {
 	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
 	return err
 }
 
 // GetByCategory は指定されたカテゴリの商品を取得します
-func (r *ProductRepository) GetByCategory(ctx context.Context, category string) ([]*models.Product, error) {
+func (r *ProductRepositoryImpl) GetByCategory(ctx context.Context, category string) ([]*models.Product, error) {
 	cursor, err := r.collection.Find(ctx, bson.M{"category": category})
 	if err != nil {
 		return nil, err
@@ -95,7 +99,7 @@ func (r *ProductRepository) GetByCategory(ctx context.Context, category string) 
 }
 
 // GetLowStock は在庫が最小在庫レベルを下回っている商品を取得します
-func (r *ProductRepository) GetLowStock(ctx context.Context) ([]*models.Product, error) {
+func (r *ProductRepositoryImpl) GetLowStock(ctx context.Context) ([]*models.Product, error) {
 	filter := bson.M{
 		"stock": bson.M{
 			"$lte": bson.M{"$ref": "min_stock_level"},
