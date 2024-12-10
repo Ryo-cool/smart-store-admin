@@ -1,0 +1,68 @@
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+
+# Go workspace specific
+.idea/
+.vscode/
+*.swp
+*.swo
+__debug_bin
+
+# Backend
+backend/tmp/
+backend/vendor/
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnpm-debug.log*
+frontend/.DS_Store
+frontend/coverage/
+frontend/.vercel
+
+# Database
+data/
+*.db
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# IDE and editor files
+*.sublime-workspace
+*.sublime-project
+.project
+.settings/
+*.tmproj
+*.esproj
+nbproject/
+*.komodoproject
+.komodotools/
+.metadata
+.gradle
+*.swp
+*.bak
+*.tmp
+*~.nib
+local.properties 
