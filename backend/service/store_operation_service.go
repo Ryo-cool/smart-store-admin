@@ -11,11 +11,13 @@ import (
 	"smart-store-admin/backend/repository"
 )
 
+// StoreOperationService は店舗運営サービスを表します
 type StoreOperationService struct {
-	repo *repository.StoreOperationRepository
+	repo repository.StoreOperationRepository
 }
 
-func NewStoreOperationService(repo *repository.StoreOperationRepository) *StoreOperationService {
+// NewStoreOperationService は新しい店舗運営サービスを作成します
+func NewStoreOperationService(repo repository.StoreOperationRepository) *StoreOperationService {
 	return &StoreOperationService{
 		repo: repo,
 	}

@@ -12,18 +12,22 @@ import (
 	"smart-store-admin/backend/models"
 )
 
-type SaleRepository struct {
+// SaleRepositoryImpl は売上リポジトリの実装です
+type SaleRepositoryImpl struct {
 	collection *mongo.Collection
 }
 
-func NewSaleRepository(db *mongo.Database) *SaleRepository {
-	return &SaleRepository{
+// インターフェースが実装されていることを確認
+var _ SaleRepository = (*SaleRepositoryImpl)(nil)
+
+func NewSaleRepository(db *mongo.Database) SaleRepository {
+	return &SaleRepositoryImpl{
 		collection: db.Collection("sales"),
 	}
 }
 
 // Create は新しい売上を記録します
-func (r *SaleRepository) Create(ctx context.Context, sale *models.Sale) error {
+func (r *SaleRepositoryImpl) Create(ctx context.Context, sale *models.Sale) error {
 	sale.CreatedAt = time.Now()
 
 	result, err := r.collection.InsertOne(ctx, sale)
@@ -36,7 +40,7 @@ func (r *SaleRepository) Create(ctx context.Context, sale *models.Sale) error {
 }
 
 // GetByID は指定されたIDの売上を取得します
-func (r *SaleRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*models.Sale, error) {
+func (r *SaleRepositoryImpl) GetByID(ctx context.Context, id primitive.ObjectID) (*models.Sale, error) {
 	var sale models.Sale
 	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&sale)
 	if err != nil {
@@ -46,7 +50,7 @@ func (r *SaleRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*m
 }
 
 // GetDailySales は日付の売上を取得します
-func (r *SaleRepository) GetDailySales(ctx context.Context, date time.Time) ([]*models.Sale, error) {
+func (r *SaleRepositoryImpl) GetDailySales(ctx context.Context, date time.Time) ([]*models.Sale, error) {
 	startOfDay := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
 	endOfDay := startOfDay.Add(24 * time.Hour)
 
@@ -71,7 +75,7 @@ func (r *SaleRepository) GetDailySales(ctx context.Context, date time.Time) ([]*
 }
 
 // GetSalesByTimeOfDay は時間帯別の売上を取得します
-func (r *SaleRepository) GetSalesByTimeOfDay(ctx context.Context, timeOfDay string) ([]*models.Sale, error) {
+func (r *SaleRepositoryImpl) GetSalesByTimeOfDay(ctx context.Context, timeOfDay string) ([]*models.Sale, error) {
 	cursor, err := r.collection.Find(ctx, bson.M{"time_of_day": timeOfDay})
 	if err != nil {
 		return nil, err
@@ -86,7 +90,7 @@ func (r *SaleRepository) GetSalesByTimeOfDay(ctx context.Context, timeOfDay stri
 }
 
 // GetSalesByDateRange は指定期間の売上を取得します
-func (r *SaleRepository) GetSalesByDateRange(ctx context.Context, start, end time.Time) ([]*models.Sale, error) {
+func (r *SaleRepositoryImpl) GetSalesByDateRange(ctx context.Context, start, end time.Time) ([]*models.Sale, error) {
 	filter := bson.M{
 		"created_at": bson.M{
 			"$gte": start,
@@ -109,7 +113,7 @@ func (r *SaleRepository) GetSalesByDateRange(ctx context.Context, start, end tim
 }
 
 // GetTotalSalesAmount は指定期間の総売上金額を取得します
-func (r *SaleRepository) GetTotalSalesAmount(ctx context.Context, start, end time.Time) (float64, error) {
+func (r *SaleRepositoryImpl) GetTotalSalesAmount(ctx context.Context, start, end time.Time) (float64, error) {
 	pipeline := mongo.Pipeline{
 		bson.D{
 			primitive.E{Key: "$match", Value: bson.M{
