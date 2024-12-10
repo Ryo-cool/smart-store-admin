@@ -66,3 +66,6 @@ nbproject/
 *.tmp
 *~.nib
 local.properties 
+
+# Project documentation
+要件.md
