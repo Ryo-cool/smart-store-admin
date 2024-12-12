@@ -39,6 +39,8 @@ type SaleRepository interface {
 	GetSalesByTimeOfDay(ctx context.Context, timeOfDay string) ([]*models.Sale, error)
 	GetSalesByDateRange(ctx context.Context, start, end time.Time) ([]*models.Sale, error)
 	GetTotalSalesAmount(ctx context.Context, start, end time.Time) (float64, error)
+	GetEnvironmentalImpactAnalytics(ctx context.Context, start, end time.Time) (*models.EnvironmentalImpact, error)
+	GetSalesByCategory(ctx context.Context, start, end time.Time) (map[string]int, error)
 }
 
 // StoreOperationRepository は店舗運営リポジトリのインターフェースを定義します

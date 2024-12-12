@@ -164,3 +164,11 @@ func isValidTimeOfDay(timeOfDay string) bool {
 	}
 	return validTimes[timeOfDay]
 }
+
+func (s *SaleService) GetEnvironmentalImpactAnalytics(ctx context.Context, start, end time.Time) (*models.EnvironmentalImpact, error) {
+	return s.saleRepo.GetEnvironmentalImpactAnalytics(ctx, start, end)
+}
+
+func (s *SaleService) GetSalesByCategory(ctx context.Context, start, end time.Time) (map[string]int, error) {
+	return s.saleRepo.GetSalesByCategory(ctx, start, end)
+}

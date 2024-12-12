@@ -89,7 +89,7 @@ func (r *SaleRepositoryImpl) GetSalesByTimeOfDay(ctx context.Context, timeOfDay 
 	return sales, nil
 }
 
-// GetSalesByDateRange は指定期間の売上を取得します
+// GetSalesByDateRange は指定期間の売上を取得し��す
 func (r *SaleRepositoryImpl) GetSalesByDateRange(ctx context.Context, start, end time.Time) ([]*models.Sale, error) {
 	filter := bson.M{
 		"created_at": bson.M{
@@ -150,4 +150,58 @@ func (r *SaleRepositoryImpl) GetTotalSalesAmount(ctx context.Context, start, end
 		return 0, nil
 	}
 	return result[0].Total, nil
+}
+
+// GetEnvironmentalImpactAnalytics は環境影響の分析データを取得します
+func (r *SaleRepositoryImpl) GetEnvironmentalImpactAnalytics(ctx context.Context, start, end time.Time) (*models.EnvironmentalImpact, error) {
+	sales, err := r.GetSalesByDateRange(ctx, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	impact := &models.EnvironmentalImpact{}
+	var totalItems int
+	for _, sale := range sales {
+		impact.TotalCO2Saved += sale.TotalCO2Saved
+		totalItems += len(sale.Items)
+	}
+
+	if totalItems > 0 {
+		impact.AverageCO2SavedPerItem = impact.TotalCO2Saved / float64(totalItems)
+	}
+	impact.TotalEcoFriendlyItems = totalItems
+
+	return impact, nil
+}
+
+// GetSalesByCategory はカテゴリー別の売上数を取得します
+func (r *SaleRepositoryImpl) GetSalesByCategory(ctx context.Context, start, end time.Time) (map[string]int, error) {
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.M{"created_at": bson.M{"$gte": start, "$lt": end}}}},
+		{{Key: "$unwind", Value: "$items"}},
+		{{Key: "$group", Value: bson.M{
+			"_id":   "$items.category",
+			"count": bson.M{"$sum": "$items.quantity"},
+		}}},
+	}
+
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	result := make(map[string]int)
+	for cursor.Next(ctx) {
+		var item struct {
+			Category string `bson:"_id"`
+			Count    int    `bson:"count"`
+		}
+		if err := cursor.Decode(&item); err != nil {
+			return nil, err
+		}
+		result[item.Category] = item.Count
+	}
+
+	return result, nil
 }
