@@ -1,16 +1,16 @@
 name: CodeRabbit
 
-permissions:
-  contents: read
-  pull-requests: write
+# permissions:
+#   contents: read
+#   pull-requests: write
 
 on:
   workflow_dispatch:
   pull_request:
     types: [opened]
-    branches-ignore:
-      - master
-      - main
+    # branches-ignore:
+    #   - master
+    #   - main
   pull_request_review_comment:
     types: [created]
   issue_comment:
