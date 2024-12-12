@@ -4,6 +4,10 @@ name: CodeRabbit
 #   contents: read
 #   pull-requests: write
 
+permissions:
+  contents: write # コードレビューコメントを投稿するために必要
+  pull-requests: write # プルリクエストにレビューを投稿するために必要
+
 on:
   workflow_dispatch:
   pull_request:
