@@ -68,7 +68,7 @@ func (m *MockSaleRepository) GetSalesByCategory(ctx context.Context, start, end 
 func TestCreateSale(t *testing.T) {
 	mockSaleRepo := new(MockSaleRepository)
 	mockProductRepo := new(MockProductRepository)
-	service := NewSaleService(mockSaleRepo, mockProductRepo)
+	service := &SaleService{repo: mockSaleRepo, productRepo: mockProductRepo}
 	ctx := context.Background()
 
 	productID := primitive.NewObjectID()
@@ -149,7 +149,7 @@ func TestCreateSale(t *testing.T) {
 func TestGetSalesAnalytics(t *testing.T) {
 	mockSaleRepo := new(MockSaleRepository)
 	mockProductRepo := new(MockProductRepository)
-	service := NewSaleService(mockSaleRepo, mockProductRepo)
+	service := &SaleService{repo: mockSaleRepo, productRepo: mockProductRepo}
 	ctx := context.Background()
 
 	start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -187,7 +187,7 @@ func TestGetSalesAnalytics(t *testing.T) {
 func TestGetSalesByTimeOfDay(t *testing.T) {
 	mockSaleRepo := new(MockSaleRepository)
 	mockProductRepo := new(MockProductRepository)
-	service := NewSaleService(mockSaleRepo, mockProductRepo)
+	service := &SaleService{repo: mockSaleRepo, productRepo: mockProductRepo}
 	ctx := context.Background()
 
 	tests := []struct {
@@ -228,7 +228,7 @@ func TestGetSalesByTimeOfDay(t *testing.T) {
 func TestGetEnvironmentalImpactAnalytics(t *testing.T) {
 	mockSaleRepo := new(MockSaleRepository)
 	mockProductRepo := new(MockProductRepository)
-	service := NewSaleService(mockSaleRepo, mockProductRepo)
+	service := &SaleService{repo: mockSaleRepo, productRepo: mockProductRepo}
 	ctx := context.Background()
 
 	start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -280,7 +280,7 @@ func TestGetEnvironmentalImpactAnalytics(t *testing.T) {
 func TestGetSalesByCategory(t *testing.T) {
 	mockSaleRepo := new(MockSaleRepository)
 	mockProductRepo := new(MockProductRepository)
-	service := NewSaleService(mockSaleRepo, mockProductRepo)
+	service := &SaleService{repo: mockSaleRepo, productRepo: mockProductRepo}
 	ctx := context.Background()
 
 	productID := primitive.NewObjectID()

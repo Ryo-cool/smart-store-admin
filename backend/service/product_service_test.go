@@ -58,7 +58,7 @@ func (m *MockProductRepository) GetLowStock(ctx context.Context) ([]*models.Prod
 
 func TestCreateProduct(t *testing.T) {
 	mockRepo := new(MockProductRepository)
-	service := NewProductService(mockRepo)
+	service := ProductService{repo: mockRepo}
 	ctx := context.Background()
 
 	tests := []struct {
@@ -118,7 +118,7 @@ func TestCreateProduct(t *testing.T) {
 
 func TestUpdateStock(t *testing.T) {
 	mockRepo := new(MockProductRepository)
-	service := NewProductService(mockRepo)
+	service := ProductService{repo: mockRepo}
 	ctx := context.Background()
 	productID := primitive.NewObjectID()
 
@@ -181,7 +181,7 @@ func TestUpdateStock(t *testing.T) {
 
 func TestGetProductsByCategory(t *testing.T) {
 	mockRepo := new(MockProductRepository)
-	service := NewProductService(mockRepo)
+	service := ProductService{repo: mockRepo}
 	ctx := context.Background()
 
 	expectedProducts := []*models.Product{
