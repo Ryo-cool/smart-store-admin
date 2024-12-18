@@ -6,27 +6,27 @@ import (
 )
 
 func DoSomething() {
-	f, _ := os.Open("non_existent_file.txt") // エラーを無視
-	defer f.Close()                          // ファイルが開けなかった場合でも実行される
+	f, err := os.Open("non_existent_file.txt")
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return // ファイルが開けない場合は処理を中断
+	}
+	defer f.Close()
 
 	data := make([]byte, 100)
-	n, _ := f.Read(data) // エラーを無視
+	n, err := f.Read(data)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return // ファイルが読み込めない場合は処理を中断
+	}
 	fmt.Println("Read data:", data[:n])
 
-	// 名前が適切でない
-	myVar := 123
-	fmt.Println("Variable value:", myVar)
+	// 変数名をより適切に変更
+	sampleVariable := 123
+	fmt.Println("Variable value:", sampleVariable)
 
-	// 無駄なループ
+	// 無駄なループを削除し、同等の処理を簡潔に記述
 	for i := 0; i < 10; i++ {
-		for j := 0; j < 10; j++ {
-			if i == j {
-				fmt.Println("Matching values:", i)
-			}
-		}
+		fmt.Println("Matching values:", i)
 	}
-}
-
-func main() {
-	DoSomething() // メイン関数に直接書くのはベストプラクティスではない
 }
