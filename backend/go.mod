@@ -3,6 +3,7 @@ module smart-store-admin/backend
 go 1.23.1
 
 require (
+	github.com/golang/mock v1.6.0
 	github.com/labstack/echo/v4 v4.13.2
 	github.com/stretchr/testify v1.10.0
 	go.mongodb.org/mongo-driver v1.17.1

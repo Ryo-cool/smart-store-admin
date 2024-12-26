@@ -17,11 +17,4 @@ func main() {
 	}
 	defer mongodb.Close()
 
-	// これはテスト用のコメントです
-
-	log.Printf("Connected to MongoDB at %s", cfg.MongoURI)
-	log.Printf("Server starting on port %s", cfg.Port)
-
-	// DoSomething 関数を呼び出す
-	DoSomething()
 }

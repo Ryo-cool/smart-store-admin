@@ -18,6 +18,7 @@ __debug_bin
 # Backend
 backend/tmp/
 backend/vendor/
+backend/practice/
 
 # Frontend
 frontend/node_modules/

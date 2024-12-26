@@ -13,10 +13,10 @@ import (
 )
 
 type ProductHandler struct {
-	productService service.ProductService
+	productService service.ProductServiceInterface
 }
 
-func NewProductHandler(ps service.ProductService) *ProductHandler {
+func NewProductHandler(ps service.ProductServiceInterface) *ProductHandler {
 	return &ProductHandler{
 		productService: ps,
 	}
@@ -31,7 +31,7 @@ func (h *ProductHandler) CreateProduct(c echo.Context) error {
 		})
 	}
 
-	if err := h.productService.Create(c.Request().Context(), &product); err != nil {
+	if err := h.productService.CreateProduct(c.Request().Context(), &product); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "商品の作成に失敗しました",
 		})
@@ -45,11 +45,11 @@ func (h *ProductHandler) GetProduct(c echo.Context) error {
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "無効���IDです",
+			"error": "無効なIDです",
 		})
 	}
 
-	product, err := h.productService.GetByID(c.Request().Context(), id)
+	product, err := h.productService.GetProductByID(c.Request().Context(), id)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{
 			"error": "商品が見つかりません",
