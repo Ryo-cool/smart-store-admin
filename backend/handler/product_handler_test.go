@@ -8,18 +8,21 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"smart-store-admin/backend/models"
-	"smart-store-admin/backend/service/mocks"
+	mock_service "smart-store-admin/backend/service/mocks"
 )
 
 func TestProductHandler_CreateProduct(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	// モックサービスを作成
-	mockService := new(mocks.ProductService)
+	mockService := mock_service.NewMockProductServiceInterface(ctrl)
 	handler := NewProductHandler(mockService)
 
 	// テストケースの定義
@@ -37,7 +40,9 @@ func TestProductHandler_CreateProduct(t *testing.T) {
 				Price: 100,
 			},
 			mockBehavior: func(product *models.Product) {
-				mockService.On("Create", mock.Anything, product).Return(nil)
+				mockService.EXPECT().
+					CreateProduct(gomock.Any(), product).
+					Return(nil)
 			},
 			expectedStatus: http.StatusCreated,
 			expectedBody:   `{"ID":"","Name":"Test Product","Price":100,"CreatedAt":"0001-01-01T00:00:00Z","UpdatedAt":"0001-01-01T00:00:00Z"}`,
@@ -57,7 +62,9 @@ func TestProductHandler_CreateProduct(t *testing.T) {
 				Price: 100,
 			},
 			mockBehavior: func(product *models.Product) {
-				mockService.On("Create", mock.Anything, product).Return(assert.AnError)
+				mockService.EXPECT().
+					CreateProduct(gomock.Any(), product).
+					Return(assert.AnError)
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedBody:   `{"error":"商品の作成に失敗しました"}`,
@@ -84,16 +91,16 @@ func TestProductHandler_CreateProduct(t *testing.T) {
 			// レスポンスの検証
 			assert.Equal(t, tc.expectedStatus, rec.Code)
 			assert.JSONEq(t, tc.expectedBody, rec.Body.String())
-
-			// モックの検証
-			mockService.AssertExpectations(t)
 		})
 	}
 }
 
 func TestProductHandler_GetProduct(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	// モックサービスを作成
-	mockService := new(mocks.ProductService)
+	mockService := mock_service.NewMockProductServiceInterface(ctrl)
 	handler := NewProductHandler(mockService)
 
 	// テストケースの定義
@@ -108,11 +115,13 @@ func TestProductHandler_GetProduct(t *testing.T) {
 			name:      "正常系: 商品が取得される",
 			productID: "60a7b0b0f0f0f0f0f0f0f0f0",
 			mockBehavior: func(id primitive.ObjectID) {
-				mockService.On("GetByID", mock.Anything, id).Return(&models.Product{
-					ID:    id,
-					Name:  "Test Product",
-					Price: 100,
-				}, nil)
+				mockService.EXPECT().
+					GetProductByID(gomock.Any(), id).
+					Return(&models.Product{
+						ID:    id,
+						Name:  "Test Product",
+						Price: 100,
+					}, nil)
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody:   `{"ID":"60a7b0b0f0f0f0f0f0f0f0f0","Name":"Test Product","Price":100,"CreatedAt":"0001-01-01T00:00:00Z","UpdatedAt":"0001-01-01T00:00:00Z"}`,
@@ -129,7 +138,9 @@ func TestProductHandler_GetProduct(t *testing.T) {
 			name:      "異常系: 商品が見つからない",
 			productID: "60a7b0b0f0f0f0f0f0f0f0f0",
 			mockBehavior: func(id primitive.ObjectID) {
-				mockService.On("GetByID", mock.Anything, id).Return(nil, assert.AnError)
+				mockService.EXPECT().
+					GetProductByID(gomock.Any(), id).
+					Return(nil, assert.AnError)
 			},
 			expectedStatus: http.StatusNotFound,
 			expectedBody:   `{"error":"商品が見つかりません"}`,
@@ -150,23 +161,23 @@ func TestProductHandler_GetProduct(t *testing.T) {
 			id, _ := primitive.ObjectIDFromHex(tc.productID)
 			tc.mockBehavior(id)
 
-			// ハンドラーの実行
+			// ��ンドラーの実行
 			err := handler.GetProduct(c)
 			assert.NoError(t, err)
 
 			// レスポンスの検証
 			assert.Equal(t, tc.expectedStatus, rec.Code)
 			assert.JSONEq(t, tc.expectedBody, rec.Body.String())
-
-			// モックの検証
-			mockService.AssertExpectations(t)
 		})
 	}
 }
 
 func TestProductHandler_ListProducts(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	// モックサービスを作成
-	mockService := new(mocks.ProductService)
+	mockService := mock_service.NewMockProductServiceInterface(ctrl)
 	handler := NewProductHandler(mockService)
 
 	// テストケースの定義
@@ -181,18 +192,20 @@ func TestProductHandler_ListProducts(t *testing.T) {
 			name:        "正常系: 商品リストが取得される (ページネーションなし)",
 			queryParams: "",
 			mockBehavior: func(skip int64, limit int64) {
-				mockService.On("List", mock.Anything, skip, limit).Return([]models.Product{
-					{
-						ID:    primitive.NewObjectID(),
-						Name:  "Test Product 1",
-						Price: 100,
-					},
-					{
-						ID:    primitive.NewObjectID(),
-						Name:  "Test Product 2",
-						Price: 200,
-					},
-				}, nil)
+				mockService.EXPECT().
+					List(gomock.Any(), skip, limit).
+					Return([]*models.Product{
+						{
+							ID:    primitive.NewObjectID(),
+							Name:  "Test Product 1",
+							Price: 100,
+						},
+						{
+							ID:    primitive.NewObjectID(),
+							Name:  "Test Product 2",
+							Price: 200,
+						},
+					}, nil)
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody:   `[{"ID":"000000000000000000000000","Name":"Test Product 1","Price":100,"CreatedAt":"0001-01-01T00:00:00Z","UpdatedAt":"0001-01-01T00:00:00Z"},{"ID":"000000000000000000000000","Name":"Test Product 2","Price":200,"CreatedAt":"0001-01-01T00:00:00Z","UpdatedAt":"0001-01-01T00:00:00Z"}]`,
@@ -201,18 +214,20 @@ func TestProductHandler_ListProducts(t *testing.T) {
 			name:        "正常系: 商品リストが取得される (ページネーションあり)",
 			queryParams: "?page=2&limit=5",
 			mockBehavior: func(skip int64, limit int64) {
-				mockService.On("List", mock.Anything, skip, limit).Return([]models.Product{
-					{
-						ID:    primitive.NewObjectID(),
-						Name:  "Test Product 3",
-						Price: 300,
-					},
-					{
-						ID:    primitive.NewObjectID(),
-						Name:  "Test Product 4",
-						Price: 400,
-					},
-				}, nil)
+				mockService.EXPECT().
+					List(gomock.Any(), skip, limit).
+					Return([]*models.Product{
+						{
+							ID:    primitive.NewObjectID(),
+							Name:  "Test Product 3",
+							Price: 300,
+						},
+						{
+							ID:    primitive.NewObjectID(),
+							Name:  "Test Product 4",
+							Price: 400,
+						},
+					}, nil)
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody:   `[{"ID":"000000000000000000000000","Name":"Test Product 3","Price":300,"CreatedAt":"0001-01-01T00:00:00Z","UpdatedAt":"0001-01-01T00:00:00Z"},{"ID":"000000000000000000000000","Name":"Test Product 4","Price":400,"CreatedAt":"0001-01-01T00:00:00Z","UpdatedAt":"0001-01-01T00:00:00Z"}]`,
@@ -221,7 +236,9 @@ func TestProductHandler_ListProducts(t *testing.T) {
 			name:        "異常系: 商品リストの取得に失敗",
 			queryParams: "",
 			mockBehavior: func(skip int64, limit int64) {
-				mockService.On("List", mock.Anything, skip, limit).Return(nil, assert.AnError)
+				mockService.EXPECT().
+					List(gomock.Any(), skip, limit).
+					Return(nil, assert.AnError)
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedBody:   `{"error":"商品リストの取得に失敗しました"}`,
@@ -268,16 +285,16 @@ func TestProductHandler_ListProducts(t *testing.T) {
 			}
 			expectedBodyBytes, _ := json.Marshal(expectedBody)
 			assert.JSONEq(t, string(expectedBodyBytes), rec.Body.String())
-
-			// モックの検証
-			mockService.AssertExpectations(t)
 		})
 	}
 }
 
 func TestProductHandler_UpdateProduct(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	// モックサービスを作成
-	mockService := new(mocks.ProductService)
+	mockService := mock_service.NewMockProductServiceInterface(ctrl)
 	handler := NewProductHandler(mockService)
 
 	// テストケースの定義
@@ -298,7 +315,9 @@ func TestProductHandler_UpdateProduct(t *testing.T) {
 			},
 			mockBehavior: func(id primitive.ObjectID, product *models.Product) {
 				product.ID = id
-				mockService.On("Update", mock.Anything, product).Return(nil)
+				mockService.EXPECT().
+					Update(gomock.Any(), product).
+					Return(nil)
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody:   `{"ID":"60a7b0b0f0f0f0f0f0f0f0f0","Name":"Updated Product","Price":200,"CreatedAt":"0001-01-01T00:00:00Z","UpdatedAt":"0001-01-01T00:00:00Z"}`,
@@ -333,7 +352,9 @@ func TestProductHandler_UpdateProduct(t *testing.T) {
 			},
 			mockBehavior: func(id primitive.ObjectID, product *models.Product) {
 				product.ID = id
-				mockService.On("Update", mock.Anything, product).Return(assert.AnError)
+				mockService.EXPECT().
+					Update(gomock.Any(), product).
+					Return(assert.AnError)
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedBody:   `{"error":"商品の更新に失敗しました"}`,
@@ -363,16 +384,16 @@ func TestProductHandler_UpdateProduct(t *testing.T) {
 			// レスポンスの検証
 			assert.Equal(t, tc.expectedStatus, rec.Code)
 			assert.JSONEq(t, tc.expectedBody, rec.Body.String())
-
-			// モックの検証
-			mockService.AssertExpectations(t)
 		})
 	}
 }
 
 func TestProductHandler_DeleteProduct(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	// モックサービスを作成
-	mockService := new(mocks.ProductService)
+	mockService := mock_service.NewMockProductServiceInterface(ctrl)
 	handler := NewProductHandler(mockService)
 
 	// テストケースの定義
@@ -386,7 +407,9 @@ func TestProductHandler_DeleteProduct(t *testing.T) {
 			name:      "正常系: 商品が削除される",
 			productID: "60a7b0b0f0f0f0f0f0f0f0f0",
 			mockBehavior: func(id primitive.ObjectID) {
-				mockService.On("Delete", mock.Anything, id).Return(nil)
+				mockService.EXPECT().
+					Delete(gomock.Any(), id).
+					Return(nil)
 			},
 			expectedStatus: http.StatusNoContent,
 		},
@@ -401,7 +424,9 @@ func TestProductHandler_DeleteProduct(t *testing.T) {
 			name:      "異常系: 商品の削除に失敗",
 			productID: "60a7b0b0f0f0f0f0f0f0f0f0",
 			mockBehavior: func(id primitive.ObjectID) {
-				mockService.On("Delete", mock.Anything, id).Return(assert.AnError)
+				mockService.EXPECT().
+					Delete(gomock.Any(), id).
+					Return(assert.AnError)
 			},
 			expectedStatus: http.StatusInternalServerError,
 		},
@@ -427,9 +452,6 @@ func TestProductHandler_DeleteProduct(t *testing.T) {
 
 			// レスポンスの検証
 			assert.Equal(t, tc.expectedStatus, rec.Code)
-
-			// モックの検証
-			mockService.AssertExpectations(t)
 		})
 	}
 }

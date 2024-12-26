@@ -12,10 +12,10 @@ import (
 )
 
 type SaleHandler struct {
-	saleService service.SaleService
+	saleService service.SaleServiceInterface
 }
 
-func NewSaleHandler(ss service.SaleService) *SaleHandler {
+func NewSaleHandler(ss service.SaleServiceInterface) *SaleHandler {
 	return &SaleHandler{
 		saleService: ss,
 	}
