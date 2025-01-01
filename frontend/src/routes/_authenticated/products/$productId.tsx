@@ -1,5 +1,5 @@
 import { Link, useParams, createFileRoute } from '@tanstack/react-router';
-import { IconArrowLeft, IconEdit } from '@tabler/icons-react';
+import { IconArrowLeft, IconEdit, IconPackage } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +11,9 @@ import {
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { productsApi } from '@/lib/api/products';
+import { inventoryApi } from '@/lib/api/inventory';
+import { InventoryHistoryTable } from '@/components/inventory/history-table';
+import { InventoryUpdateDialog } from '@/components/inventory/update-dialog';
 
 export const Route = createFileRoute('/_authenticated/products/$productId')({
   component: ProductDetailPage,
@@ -19,16 +22,21 @@ export const Route = createFileRoute('/_authenticated/products/$productId')({
 function ProductDetailPage() {
   const { productId } = useParams({ from: Route.fullPath });
 
-  const { data: product, isLoading, error } = useQuery({
+  const { data: product, isLoading: isLoadingProduct, error: productError } = useQuery({
     queryKey: ['product', productId],
     queryFn: () => productsApi.getProduct(productId),
   });
 
-  if (isLoading) {
+  const { data: inventoryHistory, isLoading: isLoadingHistory } = useQuery({
+    queryKey: ['inventory', productId],
+    queryFn: () => inventoryApi.getProductHistory(productId),
+  });
+
+  if (isLoadingProduct) {
     return <Skeleton className="h-48 w-full" />;
   }
 
-  if (error) {
+  if (productError) {
     return <div className="text-center text-red-500">商品の取得に失敗しました</div>;
   }
 
@@ -60,12 +68,24 @@ function ProductDetailPage() {
             <p className="text-sm text-gray-500">商品の詳細情報</p>
           </div>
         </div>
-        <Link to="edit">
-          <Button>
-            <IconEdit className="mr-2 h-4 w-4" />
-            編集
-          </Button>
-        </Link>
+        <div className="flex items-center gap-4">
+          <InventoryUpdateDialog
+            productId={productId}
+            productName={product.name}
+            trigger={
+              <Button variant="outline">
+                <IconPackage className="mr-2 h-4 w-4" />
+                在庫更新
+              </Button>
+            }
+          />
+          <Link to="edit">
+            <Button>
+              <IconEdit className="mr-2 h-4 w-4" />
+              編集
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -142,6 +162,20 @@ function ProductDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>在庫履歴</CardTitle>
+          <CardDescription>商品の在庫変動履歴</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoadingHistory ? (
+            <Skeleton className="h-48 w-full" />
+          ) : (
+            <InventoryHistoryTable histories={inventoryHistory?.histories || []} />
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 } 
