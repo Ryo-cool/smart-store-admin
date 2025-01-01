@@ -17,7 +17,7 @@ import { Pagination } from '@/components/ui/pagination';
 import { productsApi } from '@/lib/api/products';
 import { InventoryUpdateDialog } from '@/components/inventory/update-dialog';
 
-export const Route = createFileRoute('/_authenticated/inventory/')({
+export const Route = createFileRoute('/_authenticated/inventory')({
   component: InventoryPage,
 });
 
