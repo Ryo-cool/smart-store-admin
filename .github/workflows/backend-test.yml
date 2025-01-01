@@ -39,10 +39,3 @@ jobs:
         run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
         env:
           MONGODB_URI: mongodb://localhost:27017
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./backend/coverage.txt
-          flags: backend
-          fail_ci_if_error: true
