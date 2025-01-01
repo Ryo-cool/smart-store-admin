@@ -75,6 +75,22 @@ function ProductDetailPage() {
             <CardDescription>商品の基本的な情報</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {product.images && product.images.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">商品画像</h3>
+                <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-3">
+                  {product.images.map((image, index) => (
+                    <div key={index} className="relative aspect-square">
+                      <img
+                        src={image}
+                        alt={`${product.name} - 画像 ${index + 1}`}
+                        className="h-full w-full rounded-lg object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div>
               <h3 className="text-sm font-medium text-gray-500">商品名</h3>
               <p className="mt-1">{product.name}</p>

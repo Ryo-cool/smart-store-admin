@@ -1,8 +1,9 @@
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import { IconArrowLeft } from '@tabler/icons-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -24,6 +25,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { productsApi } from '@/lib/api/products';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ImageUpload } from '@/components/ui/image-upload';
 
 const productSchema = z.object({
@@ -48,26 +50,42 @@ const categories = [
   { value: 'accessories', label: 'アクセサリー' },
 ];
 
-export default function NewProductPage() {
+export default function EditProductPage() {
+  const { productId } = useParams({ from: '/_authenticated/products/$productId/edit' });
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const { data: product, isLoading } = useQuery({
+    queryKey: ['product', productId],
+    queryFn: () => productsApi.getProduct(productId),
+  });
+
   const form = useForm<ProductForm>({
     resolver: zodResolver(productSchema),
-    defaultValues: {
-      status: '販売中',
-    },
+    values: product ? {
+      name: product.name,
+      sku: product.sku,
+      price: product.price,
+      stock: product.stock,
+      description: product.description || '',
+      category: product.category || '',
+      weight: product.weight || '',
+      dimensions: product.dimensions || '',
+      status: product.status,
+      images: product.images || [],
+    } : undefined,
   });
 
   const onSubmit = async (data: ProductForm) => {
     try {
-      await productsApi.createProduct(data);
+      await productsApi.updateProduct(productId, data);
       toast({
-        title: '商品を登録しました',
-        description: '商品の登録が完了しました。',
+        title: '商品を更新しました',
+        description: '商品の更新が完了しました。',
       });
       navigate({ to: '/products' });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : '商品の登録に失敗しました。';
+      const errorMessage = error instanceof Error ? error.message : '商品の更新に失敗しました。';
       toast({
         variant: 'destructive',
         title: 'エラー',
@@ -75,6 +93,10 @@ export default function NewProductPage() {
       });
     }
   };
+
+  if (isLoading) {
+    return <Skeleton className="h-48 w-full" />;
+  }
 
   return (
     <div className="space-y-6">
@@ -85,8 +107,8 @@ export default function NewProductPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">新規商品登録</h1>
-          <p className="text-sm text-gray-500">新しい商品を登録</p>
+          <h1 className="text-2xl font-bold">商品編集</h1>
+          <p className="text-sm text-gray-500">商品情報の編集</p>
         </div>
       </div>
 
@@ -204,6 +226,7 @@ export default function NewProductPage() {
                       <SelectItem value="販売中">販売中</SelectItem>
                       <SelectItem value="在庫切れ">在庫切れ</SelectItem>
                       <SelectItem value="入荷待ち">入荷待ち</SelectItem>
+                      <SelectItem value="在庫少">在庫少</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -282,7 +305,7 @@ export default function NewProductPage() {
             <Link to="/products">
               <Button variant="outline">キャンセル</Button>
             </Link>
-            <Button type="submit">登録</Button>
+            <Button type="submit">更新</Button>
           </div>
         </form>
       </Form>
