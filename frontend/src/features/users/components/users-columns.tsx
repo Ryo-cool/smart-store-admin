@@ -24,8 +24,8 @@ export const columns: ColumnDef<User>[] = [
     ),
     meta: {
       className: cn(
-        'sticky md:table-cell left-0 z-10 rounded-md',
-        'bg-background transition-colors duration-0 group-hover/row:bg-muted group-data-[state=selected]/row:bg-muted'
+        'sticky md:table-cell left-0 z-10 rounded-tl',
+        'bg-background transition-colors duration-200 group-hover/row:bg-muted group-data-[state=selected]/row:bg-muted'
       ),
     },
     cell: ({ row }) => (
@@ -50,7 +50,7 @@ export const columns: ColumnDef<User>[] = [
     meta: {
       className: cn(
         'drop-shadow-[0_1px_2px_rgb(0_0_0_/_0.1)] dark:drop-shadow-[0_1px_2px_rgb(255_255_255_/_0.1)] lg:drop-shadow-none',
-        'bg-background transition-colors duration-0 group-hover/row:bg-muted group-data-[state=selected]/row:bg-muted',
+        'bg-background transition-colors duration-200 group-hover/row:bg-muted group-data-[state=selected]/row:bg-muted',
         'sticky left-6 md:table-cell'
       ),
     },
@@ -101,9 +101,11 @@ export const columns: ColumnDef<User>[] = [
         </div>
       )
     },
-    filterFn: 'weakEquals',
-    enableSorting: false,
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id))
+    },
     enableHiding: false,
+    enableSorting: false,
   },
   {
     accessorKey: 'role',
@@ -127,7 +129,9 @@ export const columns: ColumnDef<User>[] = [
         </div>
       )
     },
-    filterFn: 'weakEquals',
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id))
+    },
     enableSorting: false,
     enableHiding: false,
   },
