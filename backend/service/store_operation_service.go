@@ -66,7 +66,14 @@ func (s *StoreOperationService) RecordStoreOperation(ctx context.Context, op *mo
 
 // GetLatestOperation は最新の店舗運営データを取得します
 func (s *StoreOperationService) GetLatestOperation(ctx context.Context) (*models.StoreOperation, error) {
-	return s.repo.GetLatest(ctx)
+	op, err := s.repo.GetLatest(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if op == nil {
+		return nil, errors.New("no data found")
+	}
+	return op, nil
 }
 
 // GetOperationsByTimeRange は指定期間の店舗運営データを取得します

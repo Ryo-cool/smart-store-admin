@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"smart-store-admin/backend/models"
@@ -32,6 +33,24 @@ func NewSaleService(repo repository.SaleRepository, productRepo repository.Produ
 
 // Create は新しい売上を記録します
 func (ss *SaleService) Create(ctx context.Context, sale *models.Sale) error {
+	if sale == nil || len(sale.Items) == 0 {
+		return errors.New("商品が指定されていません")
+	}
+
+	// 商品の存在チェック
+	for _, item := range sale.Items {
+		if item.ProductID.IsZero() {
+			return errors.New("無効な商品IDです")
+		}
+		p, err := ss.productRepo.GetByID(ctx, item.ProductID)
+		if err != nil {
+			return err
+		}
+		if p == nil {
+			return errors.New("指定された商品が存在しません")
+		}
+	}
+
 	return ss.repo.Create(ctx, sale)
 }
 

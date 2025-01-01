@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
@@ -177,7 +176,7 @@ func TestGetLatestOperation(t *testing.T) {
 		{
 			name: "データが存在しない場合",
 			mockFn: func() {
-				mockRepo.On("GetLatest", ctx).Return(nil, errors.New("no data found"))
+				mockRepo.On("GetLatest", ctx).Return(nil, nil)
 			},
 			want:    nil,
 			wantErr: true,
@@ -186,6 +185,7 @@ func TestGetLatestOperation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			mockRepo.ExpectedCalls = nil
 			tt.mockFn()
 			got, err := service.GetLatestOperation(ctx)
 			if tt.wantErr {

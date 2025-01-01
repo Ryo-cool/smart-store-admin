@@ -54,6 +54,9 @@ func (m *MockSaleRepository) GetEnvironmentalImpactAnalytics(ctx context.Context
 
 func (m *MockSaleRepository) GetSalesByTimeOfDay(ctx context.Context, timeOfDay string) ([]*models.Sale, error) {
 	args := m.Called(ctx, timeOfDay)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).([]*models.Sale), args.Error(1)
 }
 
@@ -98,6 +101,11 @@ func TestCreate(t *testing.T) {
 			name: "正常な売上記録",
 			sale: validSale,
 			mockFn: func() {
+				mockProductRepo.On("GetByID", ctx, productID).Return(&models.Product{
+					ID:    productID,
+					Name:  "Test Product",
+					Price: 1000,
+				}, nil)
 				mockSaleRepo.On("Create", ctx, mock.AnythingOfType("*models.Sale")).Return(nil)
 			},
 			wantErr: false,
@@ -111,15 +119,15 @@ func TestCreate(t *testing.T) {
 				TimeOfDay:     "morning",
 				PaymentMethod: "cash",
 			},
-			mockFn: func() {
-				mockSaleRepo.On("Create", ctx, mock.AnythingOfType("*models.Sale")).Return(errors.New("items required"))
-			},
+			mockFn:  func() {},
 			wantErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			mockSaleRepo.ExpectedCalls = nil
+			mockProductRepo.ExpectedCalls = nil
 			tt.mockFn()
 			err := service.Create(ctx, tt.sale)
 			if tt.wantErr {

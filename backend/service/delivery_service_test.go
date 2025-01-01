@@ -179,6 +179,7 @@ func TestUpdateDeliveryStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			mockRepo.ExpectedCalls = nil
 			tt.mockFn()
 			err := service.UpdateDeliveryStatus(ctx, deliveryID, tt.newStatus)
 			if tt.wantErr {
