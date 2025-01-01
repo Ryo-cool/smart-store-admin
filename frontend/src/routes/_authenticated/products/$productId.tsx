@@ -50,11 +50,7 @@ function ProductDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link
-            from={Route.fullPath}
-            to="/_authenticated/products"
-            search={{}}
-          >
+          <Link to="..">
             <Button variant="ghost" size="icon">
               <IconArrowLeft className="h-4 w-4" />
             </Button>
@@ -64,12 +60,7 @@ function ProductDetailPage() {
             <p className="text-sm text-gray-500">商品の詳細情報</p>
           </div>
         </div>
-        <Link
-          from={Route.fullPath}
-          to="/_authenticated/products/$productId/edit"
-          params={{ productId }}
-          search={{}}
-        >
+        <Link to="edit">
           <Button>
             <IconEdit className="mr-2 h-4 w-4" />
             編集
@@ -102,6 +93,10 @@ function ProductDetailPage() {
                 className={`mt-1 inline-flex rounded-full px-2 py-1 text-xs font-medium ${
                   product.status === '在庫少'
                     ? 'bg-yellow-100 text-yellow-800'
+                    : product.status === '在庫切れ'
+                    ? 'bg-red-100 text-red-800'
+                    : product.status === '入荷待ち'
+                    ? 'bg-blue-100 text-blue-800'
                     : 'bg-green-100 text-green-800'
                 }`}
               >

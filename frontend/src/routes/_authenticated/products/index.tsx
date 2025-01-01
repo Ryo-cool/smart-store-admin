@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from '@tanstack/react-router';
+import { Link, createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { IconPlus, IconSearch } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
@@ -16,9 +16,13 @@ import { productsApi } from '@/lib/api/products';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Pagination } from '@/components/ui/pagination';
 
+export const Route = createFileRoute('/_authenticated/products/')({
+  component: ProductsPage,
+});
+
 const PER_PAGE = 10;
 
-export default function ProductsPage() {
+function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,7 +56,7 @@ export default function ProductsPage() {
           <h1 className="text-2xl font-bold">商品管理</h1>
           <p className="text-sm text-gray-500">商品の一覧と管理</p>
         </div>
-        <Link to="/products/new">
+        <Link to="new">
           <Button>
             <IconPlus className="mr-2 h-4 w-4" />
             新規商品
@@ -123,7 +127,7 @@ export default function ProductsPage() {
                 <TableRow key={product.id}>
                   <TableCell>
                     <Link
-                      to="/products/$productId"
+                      to="$productId"
                       params={{ productId: product.id }}
                       className="text-blue-600 hover:underline"
                     >
