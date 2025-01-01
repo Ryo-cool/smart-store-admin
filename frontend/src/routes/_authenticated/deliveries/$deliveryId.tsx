@@ -28,7 +28,7 @@ export const Route = createFileRoute('/_authenticated/deliveries/$deliveryId')({
 });
 
 function DeliveryDetailPage() {
-  const { deliveryId } = useParams({ from: Route.fullPath });
+  const { deliveryId } = useParams({ from: '/_authenticated/deliveries/$deliveryId' });
 
   const { data: delivery, isLoading: isLoadingDelivery } = useQuery({
     queryKey: ['delivery', deliveryId],

@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { Link, createFileRoute } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
-import { IconEdit, IconEye } from '@tabler/icons-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState } from 'react'
+import { Link, createFileRoute } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { IconEdit, IconEye } from '@tabler/icons-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -18,30 +18,30 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
-import { deliveriesApi } from '@/lib/api/deliveries';
+} from '@/components/ui/table'
+import { Skeleton } from '@/components/ui/skeleton'
+import { deliveriesApi } from '@/lib/api/deliveries'
 
 interface Delivery {
-  id: string;
-  deliveryType: string;
-  address: string;
-  estimatedDeliveryTime: string;
-  status: string;
+  id: string
+  deliveryType: string
+  address: string
+  estimatedDeliveryTime: string
+  status: string
 }
 
-export const Route = createFileRoute('/_authenticated/deliveries')({
+export const Route = createFileRoute('/_authenticated/deliveries/')({
   component: DeliveriesPage,
-});
+})
 
 function DeliveriesPage() {
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState<string | undefined>();
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState<string | undefined>()
 
   const { data, isLoading } = useQuery({
     queryKey: ['deliveries', { search, status }],
     queryFn: () => deliveriesApi.getDeliveries({ search, status }),
-  });
+  })
 
   return (
     <div className="space-y-6">
@@ -93,7 +93,7 @@ function DeliveriesPage() {
                   <TableCell>{delivery.address}</TableCell>
                   <TableCell>
                     {new Date(delivery.estimatedDeliveryTime).toLocaleString(
-                      'ja-JP'
+                      'ja-JP',
                     )}
                   </TableCell>
                   <TableCell>
@@ -102,10 +102,10 @@ function DeliveriesPage() {
                         delivery.status === '配送中'
                           ? 'bg-blue-100 text-blue-800'
                           : delivery.status === '配送完了'
-                          ? 'bg-green-100 text-green-800'
-                          : delivery.status === '配送失敗'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-gray-100 text-gray-800'
+                            ? 'bg-green-100 text-green-800'
+                            : delivery.status === '配送失敗'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-gray-100 text-gray-800'
                       }`}
                     >
                       {delivery.status}
@@ -113,12 +113,18 @@ function DeliveriesPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Link to={`/deliveries/${delivery.id}`}>
+                      <Link
+                        to="$deliveryId"
+                        params={{ deliveryId: delivery.id }}
+                      >
                         <Button variant="ghost" size="icon">
                           <IconEye className="h-4 w-4" />
                         </Button>
                       </Link>
-                      <Link to={`/deliveries/${delivery.id}/edit`}>
+                      <Link
+                        to="$deliveryId/edit"
+                        params={{ deliveryId: delivery.id }}
+                      >
                         <Button variant="ghost" size="icon">
                           <IconEdit className="h-4 w-4" />
                         </Button>
@@ -132,5 +138,5 @@ function DeliveriesPage() {
         </div>
       )}
     </div>
-  );
-} 
+  )
+}
