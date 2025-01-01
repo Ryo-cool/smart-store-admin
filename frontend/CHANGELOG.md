@@ -1,3 +1,43 @@
+## v1.0.3 (2024-12-28)
+
+### Fix
+
+- add gap between buttons in import task dialog (#70)
+- hide button sort if column cannot be hidden & update filterFn (#69)
+- nav links added in profile dropdown (#68)
+
+### Refactor
+
+- optimize states in users/tasks context (#71)
+
+## v1.0.2 (2024-12-25)
+
+### Fix
+
+- update overall layout due to scroll-lock bug (#66)
+
+### Refactor
+
+- analyze and remove unused files/exports with knip (#67)
+
+## v1.0.1 (2024-12-14)
+
+### Fix
+
+- merge two button components into one (#60)
+- loading all tabler-icon chunks in dev mode (#59)
+- display menu dropdown when sidebar collapsed (#58)
+- update spacing & alignment in dialogs/drawers
+- update border & transition of sticky columns in user table
+- update heading alignment to left in user dialogs
+- add height and scroll area in user mutation dialogs
+- update `/dashboard` route to just `/`
+- **build**: replace require with import in tailwind.config.js
+
+### Refactor
+
+- remove unnecessary layout-backup file
+
 ## v1.0.0 (2024-12-09)
 
 ### BREAKING CHANGE

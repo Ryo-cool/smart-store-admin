@@ -69,7 +69,7 @@ export function UsersInviteDialog({ open, onOpenChange }: Props) {
       }}
     >
       <DialogContent className='sm:max-w-md'>
-        <DialogHeader>
+        <DialogHeader className='text-left'>
           <DialogTitle className='flex items-center gap-2'>
             <IconMailPlus /> Invite User
           </DialogTitle>
@@ -139,7 +139,7 @@ export function UsersInviteDialog({ open, onOpenChange }: Props) {
             />
           </form>
         </Form>
-        <DialogFooter>
+        <DialogFooter className='gap-y-2'>
           <DialogClose asChild>
             <Button variant='outline'>Cancel</Button>
           </DialogClose>
