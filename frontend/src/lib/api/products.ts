@@ -31,6 +31,8 @@ export interface ProductsQuery {
   search?: string;
   category?: string;
   status?: string;
+  minPrice?: number;
+  maxPrice?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Link } from '@tanstack/react-router';
+import { useState } from 'react';
+import { Link, createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { IconPlus, IconSearch } from '@tabler/icons-react';
+import { IconSearch } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,32 +12,26 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { productsApi } from '@/lib/api/products';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Pagination } from '@/components/ui/pagination';
+import { productsApi } from '@/lib/api/products';
+import { InventoryUpdateDialog } from '@/components/inventory/update-dialog';
+
+export const Route = createFileRoute('/_authenticated/inventory')({
+  component: InventoryPage,
+});
 
 const PER_PAGE = 10;
 
-export default function ProductsPage() {
+function InventoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // 検索クエリのデバウンス処理
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(searchQuery);
-      setCurrentPage(1); // 検索時はページを1に戻す
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
   const { data, isLoading, error } = useQuery({
-    queryKey: ['products', { search: debouncedQuery, page: currentPage }],
+    queryKey: ['products', { search: searchQuery, page: currentPage }],
     queryFn: () =>
       productsApi.getProducts({
-        search: debouncedQuery,
+        search: searchQuery,
         page: currentPage,
         perPage: PER_PAGE,
       }),
@@ -49,15 +43,9 @@ export default function ProductsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">商品管理</h1>
-          <p className="text-sm text-gray-500">商品の一覧と管理</p>
+          <h1 className="text-2xl font-bold">在庫管理</h1>
+          <p className="text-sm text-gray-500">商品の在庫状況と管理</p>
         </div>
-        <Link to="/products/new">
-          <Button>
-            <IconPlus className="mr-2 h-4 w-4" />
-            新規商品
-          </Button>
-        </Link>
       </div>
 
       <div className="flex items-center justify-between gap-4">
@@ -71,6 +59,7 @@ export default function ProductsPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+
         {data && (
           <div className="text-sm text-gray-500">
             全{data.total}件中 {(currentPage - 1) * PER_PAGE + 1}-
@@ -85,14 +74,13 @@ export default function ProductsPage() {
             <TableRow>
               <TableHead>商品名</TableHead>
               <TableHead>SKU</TableHead>
-              <TableHead className="text-right">価格</TableHead>
               <TableHead className="text-right">在庫数</TableHead>
               <TableHead>ステータス</TableHead>
+              <TableHead className="text-right">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              // ローディング時のスケルトン表示
               Array.from({ length: PER_PAGE }).map((_, index) => (
                 <TableRow key={index}>
                   <TableCell>
@@ -102,13 +90,13 @@ export default function ProductsPage() {
                     <Skeleton className="h-4 w-[100px]" />
                   </TableCell>
                   <TableCell className="text-right">
-                    <Skeleton className="ml-auto h-4 w-[80px]" />
-                  </TableCell>
-                  <TableCell className="text-right">
                     <Skeleton className="ml-auto h-4 w-[60px]" />
                   </TableCell>
                   <TableCell>
                     <Skeleton className="h-4 w-[80px]" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="ml-auto h-4 w-[100px]" />
                   </TableCell>
                 </TableRow>
               ))
@@ -131,9 +119,6 @@ export default function ProductsPage() {
                     </Link>
                   </TableCell>
                   <TableCell>{product.sku}</TableCell>
-                  <TableCell className="text-right">
-                    ¥{product.price.toLocaleString()}
-                  </TableCell>
                   <TableCell className="text-right">{product.stock}</TableCell>
                   <TableCell>
                     <span
@@ -149,6 +134,13 @@ export default function ProductsPage() {
                     >
                       {product.status}
                     </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <InventoryUpdateDialog
+                      productId={product.id}
+                      productName={product.name}
+                      trigger={<Button variant="outline">在庫更新</Button>}
+                    />
                   </TableCell>
                 </TableRow>
               ))

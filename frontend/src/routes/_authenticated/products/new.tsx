@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { IconArrowLeft } from '@tabler/icons-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,17 +22,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { productsApi } from '@/lib/api/products';
+import { ImageUpload } from '@/components/ui/image-upload';
 
 const productSchema = z.object({
   name: z.string().min(1, '商品名を入力してください'),
   sku: z.string().min(1, 'SKUを入力してください'),
   price: z.number().min(0, '価格は0以上で入力してください'),
   stock: z.number().min(0, '在庫数は0以上で入力してください'),
-  description: z.string(),
+  description: z.string().optional(),
   category: z.string().min(1, 'カテゴリーを選択してください'),
-  weight: z.string(),
-  dimensions: z.string(),
-  status: z.enum(['販売中', '在庫切れ', '入荷待ち']),
+  weight: z.string().optional(),
+  dimensions: z.string().optional(),
+  status: z.enum(['販売中', '在庫切れ', '入荷待ち', '在庫少']),
+  images: z.array(z.string()).optional(),
 });
 
 type ProductForm = z.infer<typeof productSchema>;
@@ -45,6 +49,8 @@ const categories = [
 ];
 
 export default function NewProductPage() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const form = useForm<ProductForm>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -52,8 +58,22 @@ export default function NewProductPage() {
     },
   });
 
-  const onSubmit = (data: ProductForm) => {
-    console.log(data);
+  const onSubmit = async (data: ProductForm) => {
+    try {
+      await productsApi.createProduct(data);
+      toast({
+        title: '商品を登録しました',
+        description: '商品の登録が完了しました。',
+      });
+      navigate({ to: '/products' });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '商品の登録に失敗しました。';
+      toast({
+        variant: 'destructive',
+        title: 'エラー',
+        description: errorMessage,
+      });
+    }
   };
 
   return (
@@ -236,6 +256,27 @@ export default function NewProductPage() {
               )}
             />
           </div>
+
+          <FormField
+            control={form.control}
+            name="images"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>商品画像</FormLabel>
+                <FormControl>
+                  <ImageUpload
+                    value={field.value}
+                    onChange={field.onChange}
+                    maxFiles={5}
+                  />
+                </FormControl>
+                <FormDescription>
+                  商品の画像を最大5枚までアップロードできます。
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <div className="flex justify-end gap-4">
             <Link to="/products">

@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 const loginSchema = z.object({
   email: z.string().email('有効なメールアドレスを入力してください'),
@@ -39,12 +39,20 @@ export default function LoginPage() {
         description: 'ダッシュボードにリダイレクトします',
       });
       navigate({ to: '/' });
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'エラー',
-        description: 'ログインに失敗しました。認証情報を確認してください。',
-      });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast({
+          variant: 'destructive',
+          title: 'エラー',
+          description: error.message || 'ログインに失敗しました。認証情報を確認してください。',
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'エラー',
+          description: 'ログインに失敗しました。認証情報を確認してください。',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
