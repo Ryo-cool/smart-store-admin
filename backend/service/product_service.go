@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"smart-store-admin/backend/models"
 	"smart-store-admin/backend/repository"
 
@@ -27,6 +28,9 @@ func NewProductService(repo repository.ProductRepository) *ProductService {
 }
 
 func (ps *ProductService) GetProductsByCategory(ctx context.Context, category string) ([]*models.Product, error) {
+	if category == "" {
+		return nil, errors.New("category is required")
+	}
 	products, err := ps.repo.GetByCategory(ctx, category)
 	if err != nil {
 		return nil, err
@@ -35,6 +39,12 @@ func (ps *ProductService) GetProductsByCategory(ctx context.Context, category st
 }
 
 func (ps *ProductService) CreateProduct(ctx context.Context, product *models.Product) error {
+	if product.Name == "" {
+		return errors.New("product name is required")
+	}
+	if product.Price < 0 {
+		return errors.New("price must be non-negative")
+	}
 	return ps.repo.Create(ctx, product)
 }
 
@@ -44,7 +54,12 @@ func (ps *ProductService) UpdateStock(ctx context.Context, id primitive.ObjectID
 		return err
 	}
 
-	product.Stock = quantity
+	newStock := product.Stock + quantity
+	if newStock < 0 {
+		return errors.New("insufficient stock")
+	}
+
+	product.Stock = newStock
 	return ps.repo.Update(ctx, product)
 }
 
@@ -53,13 +68,31 @@ func (ps *ProductService) GetProductByID(ctx context.Context, id primitive.Objec
 }
 
 func (ps *ProductService) List(ctx context.Context, skip, limit int64) ([]*models.Product, error) {
+	if skip < 0 {
+		return nil, errors.New("skip must be non-negative")
+	}
+	if limit <= 0 {
+		return nil, errors.New("limit must be positive")
+	}
 	return ps.repo.List(ctx, skip, limit)
 }
 
 func (ps *ProductService) Update(ctx context.Context, product *models.Product) error {
+	if product.ID.IsZero() {
+		return errors.New("product ID is required")
+	}
+	if product.Name == "" {
+		return errors.New("product name is required")
+	}
+	if product.Price < 0 {
+		return errors.New("price must be non-negative")
+	}
 	return ps.repo.Update(ctx, product)
 }
 
 func (ps *ProductService) Delete(ctx context.Context, id primitive.ObjectID) error {
+	if id.IsZero() {
+		return errors.New("product ID is required")
+	}
 	return ps.repo.Delete(ctx, id)
 }

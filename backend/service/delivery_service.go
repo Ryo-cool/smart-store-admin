@@ -82,17 +82,32 @@ func (s *DeliveryService) UpdateDeliveryStatus(ctx context.Context, id primitive
 	if err != nil {
 		return err
 	}
+	if delivery == nil {
+		return errors.New("delivery not found")
+	}
 
 	// ステータスの遷移チェック
 	if !isValidStatusTransition(delivery.Status, status) {
 		return errors.New("invalid status transition")
 	}
 
+	// ステータスが完了に変更される場合、完了時刻を設定
+	if status == models.StatusCompleted {
+		now := time.Now()
+		delivery.CompletedAt = &now
+		delivery.Status = status
+		return s.repo.UpdateStatus(ctx, id, status)
+	}
+
+	delivery.Status = status
 	return s.repo.UpdateStatus(ctx, id, status)
 }
 
 // UpdateDeliveryLocation は配送の現在位置を更新します
 func (s *DeliveryService) UpdateDeliveryLocation(ctx context.Context, id primitive.ObjectID, location models.Location) error {
+	if location == (models.Location{}) {
+		return errors.New("invalid location")
+	}
 	return s.repo.UpdateLocation(ctx, id, location)
 }
 
@@ -103,19 +118,39 @@ func (s *DeliveryService) GetActiveDeliveries(ctx context.Context) ([]*models.De
 
 // GetDeliveriesByRobot は指定されたロボットの配送一覧を取得します
 func (s *DeliveryService) GetDeliveriesByRobot(ctx context.Context, robotID string) ([]*models.Delivery, error) {
+	if robotID == "" {
+		return nil, errors.New("robot ID is required")
+	}
 	return s.repo.GetDeliveriesByRobot(ctx, robotID)
 }
 
 // isValidStatusTransition はステータスの遷移が有効かどうかをチェックします
 func isValidStatusTransition(current, new models.DeliveryStatus) bool {
-	switch current {
-	case models.StatusPending:
-		return new == models.StatusInProgress
-	case models.StatusInProgress:
-		return new == models.StatusCompleted || new == models.StatusCancelled
-	case models.StatusCompleted, models.StatusCancelled:
-		return false
-	default:
+	validTransitions := map[models.DeliveryStatus][]models.DeliveryStatus{
+		models.StatusPending: {
+			models.StatusInProgress,
+			models.StatusCancelled,
+			models.StatusFailed,
+		},
+		models.StatusInProgress: {
+			models.StatusCompleted,
+			models.StatusCancelled,
+			models.StatusFailed,
+		},
+		models.StatusCompleted: {}, // 完了状態からの遷移は不可
+		models.StatusCancelled: {}, // キャンセル状態からの遷移は不可
+		models.StatusFailed:    {}, // 失敗状態からの遷移は不可
+	}
+
+	allowedStatuses, exists := validTransitions[current]
+	if !exists {
 		return false
 	}
+
+	for _, status := range allowedStatuses {
+		if status == new {
+			return true
+		}
+	}
+	return false
 }

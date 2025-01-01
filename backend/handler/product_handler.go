@@ -51,6 +51,12 @@ func (h *ProductHandler) GetProduct(c echo.Context) error {
 
 	product, err := h.productService.GetProductByID(c.Request().Context(), id)
 	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "商品の取得に失敗しました",
+		})
+	}
+
+	if product == nil {
 		return c.JSON(http.StatusNotFound, map[string]string{
 			"error": "商品が見つかりません",
 		})
@@ -91,7 +97,7 @@ func (h *ProductHandler) UpdateProduct(c echo.Context) error {
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "無効なIDです",
+			"error": "無効な商品IDです",
 		})
 	}
 
@@ -117,7 +123,7 @@ func (h *ProductHandler) DeleteProduct(c echo.Context) error {
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "無効なIDです",
+			"error": "無効な商品IDです",
 		})
 	}
 
@@ -127,5 +133,7 @@ func (h *ProductHandler) DeleteProduct(c echo.Context) error {
 		})
 	}
 
-	return c.NoContent(http.StatusNoContent)
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "商品を削除しました",
+	})
 }
