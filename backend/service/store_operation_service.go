@@ -11,6 +11,25 @@ import (
 	"smart-store-admin/backend/repository"
 )
 
+// StoreOperationServiceInterface は店舗運営サービスのインターフェースを定義します
+type StoreOperationServiceInterface interface {
+	RecordStoreOperation(ctx context.Context, op *models.StoreOperation) error
+	GetLatestOperation(ctx context.Context) (*models.StoreOperation, error)
+	GetOperationsByTimeRange(ctx context.Context, start, end time.Time) ([]*models.StoreOperation, error)
+	UpdateShelfStatus(ctx context.Context, opID primitive.ObjectID, status models.ShelfStatus) error
+	UpdateCheckoutStatus(ctx context.Context, opID primitive.ObjectID, status models.CheckoutStatus) error
+	GetEnergyUsageAnalytics(ctx context.Context, start, end time.Time) (*EnergyUsageAnalytics, error)
+}
+
+// EnergyUsageAnalytics はエネルギー使用量分析データを表す構造体です
+type EnergyUsageAnalytics struct {
+	AverageLightingUsage float64
+	AverageACUsage       float64
+	AverageRefrigUsage   float64
+	TotalUsage           float64
+	UsagePerHour         float64
+}
+
 // StoreOperationService は店舗運営サービスを表します
 type StoreOperationService struct {
 	repo repository.StoreOperationRepository
@@ -109,15 +128,6 @@ func (s *StoreOperationService) GetEnergyUsageAnalytics(ctx context.Context, sta
 		TotalUsage:           usage["lighting"] + usage["ac"] + usage["refrig"],
 		UsagePerHour:         (usage["lighting"] + usage["ac"] + usage["refrig"]) / duration,
 	}, nil
-}
-
-// EnergyUsageAnalytics はエネルギー使用量分析データを表す構造体です
-type EnergyUsageAnalytics struct {
-	AverageLightingUsage float64
-	AverageACUsage       float64
-	AverageRefrigUsage   float64
-	TotalUsage           float64
-	UsagePerHour         float64
 }
 
 // isValidTemperature は温度が妥当な範囲内かどうかを検証します

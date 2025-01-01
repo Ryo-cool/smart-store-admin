@@ -11,6 +11,16 @@ import (
 	"smart-store-admin/backend/repository"
 )
 
+// DeliveryServiceInterface は配送サービスのインターフェースを定義します
+type DeliveryServiceInterface interface {
+	CreateDelivery(ctx context.Context, delivery *models.Delivery) error
+	GetDeliveryByID(ctx context.Context, id primitive.ObjectID) (*models.Delivery, error)
+	UpdateDeliveryStatus(ctx context.Context, id primitive.ObjectID, status models.DeliveryStatus) error
+	UpdateDeliveryLocation(ctx context.Context, id primitive.ObjectID, location models.Location) error
+	GetActiveDeliveries(ctx context.Context) ([]*models.Delivery, error)
+	GetDeliveriesByRobot(ctx context.Context, robotID string) ([]*models.Delivery, error)
+}
+
 // DeliveryService は配送サービスを表します
 type DeliveryService struct {
 	repo repository.DeliveryRepository
@@ -61,6 +71,11 @@ func (s *DeliveryService) ListDeliveries(ctx context.Context, page, pageSize int
 	return s.repo.List(ctx, skip, pageSize)
 }
 
+// GetDeliveryByID は指定されたIDの配送を取得します
+func (s *DeliveryService) GetDeliveryByID(ctx context.Context, id primitive.ObjectID) (*models.Delivery, error) {
+	return s.repo.GetByID(ctx, id)
+}
+
 // UpdateDeliveryStatus は配送のステータスを更新します
 func (s *DeliveryService) UpdateDeliveryStatus(ctx context.Context, id primitive.ObjectID, status models.DeliveryStatus) error {
 	delivery, err := s.repo.GetByID(ctx, id)
@@ -68,7 +83,7 @@ func (s *DeliveryService) UpdateDeliveryStatus(ctx context.Context, id primitive
 		return err
 	}
 
-	// ステータス遷移の検証
+	// ステータスの遷移チェック
 	if !isValidStatusTransition(delivery.Status, status) {
 		return errors.New("invalid status transition")
 	}
@@ -76,48 +91,29 @@ func (s *DeliveryService) UpdateDeliveryStatus(ctx context.Context, id primitive
 	return s.repo.UpdateStatus(ctx, id, status)
 }
 
-// UpdateLocation はロボット/ドローンの現在位置を更新します
-func (s *DeliveryService) UpdateLocation(ctx context.Context, id primitive.ObjectID, location models.Location) error {
-	delivery, err := s.repo.GetByID(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	if delivery.Status == models.StatusCompleted || delivery.Status == models.StatusFailed {
-		return errors.New("cannot update location of completed or failed delivery")
-	}
-
-	// 進行中でない場合は、ステータスを進行中に更新
-	if delivery.Status == models.StatusPending {
-		if err := s.repo.UpdateStatus(ctx, id, models.StatusInProgress); err != nil {
-			return err
-		}
-	}
-
+// UpdateDeliveryLocation は配送の現在位置を更新します
+func (s *DeliveryService) UpdateDeliveryLocation(ctx context.Context, id primitive.ObjectID, location models.Location) error {
 	return s.repo.UpdateLocation(ctx, id, location)
 }
 
-// GetActiveDeliveries はアクティブな配送を取得します
+// GetActiveDeliveries はアクティブな配送一覧を取得します
 func (s *DeliveryService) GetActiveDeliveries(ctx context.Context) ([]*models.Delivery, error) {
 	return s.repo.GetActiveDeliveries(ctx)
 }
 
-// GetDeliveriesByRobot は特定のロボット/ドローンの配送履歴を取得します
+// GetDeliveriesByRobot は指定されたロボットの配送一覧を取得します
 func (s *DeliveryService) GetDeliveriesByRobot(ctx context.Context, robotID string) ([]*models.Delivery, error) {
-	if robotID == "" {
-		return nil, errors.New("robot ID is required")
-	}
 	return s.repo.GetDeliveriesByRobot(ctx, robotID)
 }
 
-// isValidStatusTransition はステータス遷移が有効かどうかを検証します
-func isValidStatusTransition(current, next models.DeliveryStatus) bool {
+// isValidStatusTransition はステータスの遷移が有効かどうかをチェックします
+func isValidStatusTransition(current, new models.DeliveryStatus) bool {
 	switch current {
 	case models.StatusPending:
-		return next == models.StatusInProgress || next == models.StatusFailed
+		return new == models.StatusInProgress
 	case models.StatusInProgress:
-		return next == models.StatusCompleted || next == models.StatusFailed
-	case models.StatusCompleted, models.StatusFailed:
+		return new == models.StatusCompleted || new == models.StatusCancelled
+	case models.StatusCompleted, models.StatusCancelled:
 		return false
 	default:
 		return false

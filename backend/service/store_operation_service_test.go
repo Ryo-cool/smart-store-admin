@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"smart-store-admin/backend/repository"
 )
 
+// MockStoreOperationRepository はrepository.StoreOperationRepositoryインターフェースのモック実装です
 type MockStoreOperationRepository struct {
 	mock.Mock
 }
@@ -59,16 +61,14 @@ func TestRecordStoreOperation(t *testing.T) {
 
 	validShelfStatus := models.ShelfStatus{
 		ShelfID:     "SHELF-001",
-		StockLevel:  80,
 		Temperature: 20.0,
-		LastChecked: time.Now(),
+		StockLevel:  80,
 	}
 
 	validCheckoutStatus := models.CheckoutStatus{
 		RegisterID:    "REG-001",
+		QueueLength:   3,
 		IsOperational: true,
-		QueueLength:   0,
-		LastChecked:   time.Now(),
 	}
 
 	tests := []struct {
@@ -78,13 +78,12 @@ func TestRecordStoreOperation(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "正常な店舗運営データの記録",
+			name: "正常な店舗運営データ記録",
 			op: &models.StoreOperation{
-				Temperature:  25.0,
-				Humidity:     50.0,
-				CrowdDensity: 0.3,
-				Shelves:      []models.ShelfStatus{validShelfStatus},
-				Checkouts:    []models.CheckoutStatus{validCheckoutStatus},
+				Temperature: 25.0,
+				Humidity:    50.0,
+				Shelves:     []models.ShelfStatus{validShelfStatus},
+				Checkouts:   []models.CheckoutStatus{validCheckoutStatus},
 			},
 			mockFn: func() {
 				mockRepo.On("Create", ctx, mock.AnythingOfType("*models.StoreOperation")).Return(nil)
@@ -94,10 +93,19 @@ func TestRecordStoreOperation(t *testing.T) {
 		{
 			name: "棚データなしでエラー",
 			op: &models.StoreOperation{
-				Temperature:  25.0,
-				Humidity:     50.0,
-				CrowdDensity: 0.3,
-				Checkouts:    []models.CheckoutStatus{validCheckoutStatus},
+				Temperature: 25.0,
+				Humidity:    50.0,
+				Checkouts:   []models.CheckoutStatus{validCheckoutStatus},
+			},
+			mockFn:  func() {},
+			wantErr: true,
+		},
+		{
+			name: "レジデータなしでエラー",
+			op: &models.StoreOperation{
+				Temperature: 25.0,
+				Humidity:    50.0,
+				Shelves:     []models.ShelfStatus{validShelfStatus},
 			},
 			mockFn:  func() {},
 			wantErr: true,
@@ -105,8 +113,19 @@ func TestRecordStoreOperation(t *testing.T) {
 		{
 			name: "無効な温度でエラー",
 			op: &models.StoreOperation{
-				Temperature: 60.0, // 範囲外
+				Temperature: -40.0,
 				Humidity:    50.0,
+				Shelves:     []models.ShelfStatus{validShelfStatus},
+				Checkouts:   []models.CheckoutStatus{validCheckoutStatus},
+			},
+			mockFn:  func() {},
+			wantErr: true,
+		},
+		{
+			name: "無効な湿度でエラー",
+			op: &models.StoreOperation{
+				Temperature: 25.0,
+				Humidity:    150.0,
 				Shelves:     []models.ShelfStatus{validShelfStatus},
 				Checkouts:   []models.CheckoutStatus{validCheckoutStatus},
 			},
@@ -128,6 +147,136 @@ func TestRecordStoreOperation(t *testing.T) {
 	}
 }
 
+func TestGetLatestOperation(t *testing.T) {
+	mockRepo := new(MockStoreOperationRepository)
+	service := NewStoreOperationService(mockRepo)
+	ctx := context.Background()
+
+	tests := []struct {
+		name    string
+		mockFn  func()
+		want    *models.StoreOperation
+		wantErr bool
+	}{
+		{
+			name: "最新の店舗運営データ取得",
+			mockFn: func() {
+				expectedOp := &models.StoreOperation{
+					ID:          primitive.NewObjectID(),
+					Temperature: 25.0,
+					Humidity:    50.0,
+				}
+				mockRepo.On("GetLatest", ctx).Return(expectedOp, nil)
+			},
+			want: &models.StoreOperation{
+				Temperature: 25.0,
+				Humidity:    50.0,
+			},
+			wantErr: false,
+		},
+		{
+			name: "データが存在しない場合",
+			mockFn: func() {
+				mockRepo.On("GetLatest", ctx).Return(nil, errors.New("no data found"))
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFn()
+			got, err := service.GetLatestOperation(ctx)
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, got)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want.Temperature, got.Temperature)
+				assert.Equal(t, tt.want.Humidity, got.Humidity)
+			}
+		})
+	}
+}
+
+func TestGetOperationsByTimeRange(t *testing.T) {
+	mockRepo := new(MockStoreOperationRepository)
+	service := NewStoreOperationService(mockRepo)
+	ctx := context.Background()
+
+	now := time.Now()
+	start := now.Add(-24 * time.Hour)
+	end := now
+
+	tests := []struct {
+		name    string
+		start   time.Time
+		end     time.Time
+		mockFn  func()
+		want    []*models.StoreOperation
+		wantErr bool
+	}{
+		{
+			name:  "正常な期間での取得",
+			start: start,
+			end:   end,
+			mockFn: func() {
+				expectedOps := []*models.StoreOperation{
+					{
+						ID:          primitive.NewObjectID(),
+						Temperature: 25.0,
+						Humidity:    50.0,
+					},
+					{
+						ID:          primitive.NewObjectID(),
+						Temperature: 26.0,
+						Humidity:    51.0,
+					},
+				}
+				mockRepo.On("GetByTimeRange", ctx, start, end).Return(expectedOps, nil)
+			},
+			want: []*models.StoreOperation{
+				{
+					Temperature: 25.0,
+					Humidity:    50.0,
+				},
+				{
+					Temperature: 26.0,
+					Humidity:    51.0,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:    "無効な期間でエラー",
+			start:   end,
+			end:     start,
+			mockFn:  func() {},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFn()
+			got, err := service.GetOperationsByTimeRange(ctx, tt.start, tt.end)
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, got)
+			} else {
+				assert.NoError(t, err)
+				assert.Len(t, got, len(tt.want))
+				for i, op := range got {
+					assert.Equal(t, tt.want[i].Temperature, op.Temperature)
+					assert.Equal(t, tt.want[i].Humidity, op.Humidity)
+				}
+			}
+		})
+	}
+}
+
 func TestUpdateShelfStatus(t *testing.T) {
 	mockRepo := new(MockStoreOperationRepository)
 	service := NewStoreOperationService(mockRepo)
@@ -141,12 +290,11 @@ func TestUpdateShelfStatus(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "正常な棚状態の更新",
+			name: "正常な棚状態更新",
 			status: models.ShelfStatus{
 				ShelfID:     "SHELF-001",
-				StockLevel:  80,
 				Temperature: 20.0,
-				LastChecked: time.Now(),
+				StockLevel:  80,
 			},
 			mockFn: func() {
 				mockRepo.On("UpdateShelfStatus", ctx, opID, mock.AnythingOfType("models.ShelfStatus")).Return(nil)
@@ -154,11 +302,20 @@ func TestUpdateShelfStatus(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "棚ID無しでエラー",
+			name: "棚IDなしでエラー",
 			status: models.ShelfStatus{
-				StockLevel:  80,
 				Temperature: 20.0,
-				LastChecked: time.Now(),
+				StockLevel:  80,
+			},
+			mockFn:  func() {},
+			wantErr: true,
+		},
+		{
+			name: "無効な在庫レベルでエラー",
+			status: models.ShelfStatus{
+				ShelfID:     "SHELF-001",
+				Temperature: 20.0,
+				StockLevel:  -1,
 			},
 			mockFn:  func() {},
 			wantErr: true,
@@ -167,9 +324,8 @@ func TestUpdateShelfStatus(t *testing.T) {
 			name: "無効な温度でエラー",
 			status: models.ShelfStatus{
 				ShelfID:     "SHELF-001",
+				Temperature: -40.0,
 				StockLevel:  80,
-				Temperature: -40.0, // 範囲外
-				LastChecked: time.Now(),
 			},
 			mockFn:  func() {},
 			wantErr: true,
@@ -189,28 +345,142 @@ func TestUpdateShelfStatus(t *testing.T) {
 	}
 }
 
+func TestUpdateCheckoutStatus(t *testing.T) {
+	mockRepo := new(MockStoreOperationRepository)
+	service := NewStoreOperationService(mockRepo)
+	ctx := context.Background()
+	opID := primitive.NewObjectID()
+
+	tests := []struct {
+		name    string
+		status  models.CheckoutStatus
+		mockFn  func()
+		wantErr bool
+	}{
+		{
+			name: "正常なレジ状態更新",
+			status: models.CheckoutStatus{
+				RegisterID:    "REG-001",
+				QueueLength:   3,
+				IsOperational: true,
+			},
+			mockFn: func() {
+				mockRepo.On("UpdateCheckoutStatus", ctx, opID, mock.AnythingOfType("models.CheckoutStatus")).Return(nil)
+			},
+			wantErr: false,
+		},
+		{
+			name: "レジIDなしでエラー",
+			status: models.CheckoutStatus{
+				QueueLength:   3,
+				IsOperational: true,
+			},
+			mockFn:  func() {},
+			wantErr: true,
+		},
+		{
+			name: "無効な待ち行列長でエラー",
+			status: models.CheckoutStatus{
+				RegisterID:    "REG-001",
+				QueueLength:   -1,
+				IsOperational: true,
+			},
+			mockFn:  func() {},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFn()
+			err := service.UpdateCheckoutStatus(ctx, opID, tt.status)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestGetEnergyUsageAnalytics(t *testing.T) {
 	mockRepo := new(MockStoreOperationRepository)
 	service := NewStoreOperationService(mockRepo)
 	ctx := context.Background()
 
-	start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
-	end := time.Date(2024, 1, 2, 0, 0, 0, 0, time.UTC)
+	now := time.Now()
+	start := now.Add(-24 * time.Hour)
+	end := now
 
-	usage := map[string]float64{
-		"lighting": 100.0,
-		"ac":       200.0,
-		"refrig":   300.0,
+	tests := []struct {
+		name    string
+		start   time.Time
+		end     time.Time
+		mockFn  func()
+		want    *EnergyUsageAnalytics
+		wantErr bool
+	}{
+		{
+			name:  "正常なエネルギー使用量分析",
+			start: start,
+			end:   end,
+			mockFn: func() {
+				usage := map[string]float64{
+					"lighting": 100.0,
+					"ac":       200.0,
+					"refrig":   150.0,
+				}
+				mockRepo.On("GetAverageEnergyUsage", ctx, start, end).Return(usage, nil)
+			},
+			want: &EnergyUsageAnalytics{
+				AverageLightingUsage: 100.0,
+				AverageACUsage:       200.0,
+				AverageRefrigUsage:   150.0,
+				TotalUsage:           450.0,
+				UsagePerHour:         18.75, // 450.0 / 24
+			},
+			wantErr: false,
+		},
+		{
+			name:    "無効な期間でエラー",
+			start:   end,
+			end:     start,
+			mockFn:  func() {},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:  "0時間の期間でエラー",
+			start: now,
+			end:   now,
+			mockFn: func() {
+				usage := map[string]float64{
+					"lighting": 100.0,
+					"ac":       200.0,
+					"refrig":   150.0,
+				}
+				mockRepo.On("GetAverageEnergyUsage", ctx, now, now).Return(usage, nil)
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 
-	mockRepo.On("GetAverageEnergyUsage", ctx, start, end).Return(usage, nil)
-
-	analytics, err := service.GetEnergyUsageAnalytics(ctx, start, end)
-	assert.NoError(t, err)
-	assert.NotNil(t, analytics)
-	assert.Equal(t, 100.0, analytics.AverageLightingUsage)
-	assert.Equal(t, 200.0, analytics.AverageACUsage)
-	assert.Equal(t, 300.0, analytics.AverageRefrigUsage)
-	assert.Equal(t, 600.0, analytics.TotalUsage)
-	assert.Equal(t, 25.0, analytics.UsagePerHour) // 600 / 24 hours
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFn()
+			got, err := service.GetEnergyUsageAnalytics(ctx, tt.start, tt.end)
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, got)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want.AverageLightingUsage, got.AverageLightingUsage)
+				assert.Equal(t, tt.want.AverageACUsage, got.AverageACUsage)
+				assert.Equal(t, tt.want.AverageRefrigUsage, got.AverageRefrigUsage)
+				assert.Equal(t, tt.want.TotalUsage, got.TotalUsage)
+				assert.Equal(t, tt.want.UsagePerHour, got.UsagePerHour)
+			}
+		})
+	}
 }
