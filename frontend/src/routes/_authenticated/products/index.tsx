@@ -142,7 +142,7 @@ function ProductsPage() {
           <h1 className="text-2xl font-bold">商品管理</h1>
           <p className="text-sm text-gray-500">商品の一覧と管理</p>
         </div>
-        <Link to="new">
+        <Link to=".">
           <Button>
             <IconPlus className="mr-2 h-4 w-4" />
             新規商品

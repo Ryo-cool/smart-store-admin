@@ -1,39 +1,45 @@
-import { Link, useParams, createFileRoute } from '@tanstack/react-router';
-import { IconArrowLeft, IconEdit } from '@tabler/icons-react';
-import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
+import { Link, useParams, createFileRoute } from '@tanstack/react-router'
+import { IconArrowLeft, IconEdit } from '@tabler/icons-react'
+import { useQuery } from '@tanstack/react-query'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { productsApi } from '@/lib/api/products';
+} from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { productsApi } from '@/lib/api/products'
 
-export const Route = createFileRoute('/_authenticated/products/$productId')({
+export const Route = createFileRoute('/products/$productId')({
   component: ProductDetailPage,
-});
+})
 
 function ProductDetailPage() {
-  const { productId } = useParams({ from: Route.fullPath });
+  const { productId } = useParams({ from: Route.fullPath })
 
-  const { data: product, isLoading, error } = useQuery({
+  const {
+    data: product,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['product', productId],
     queryFn: () => productsApi.getProduct(productId),
-  });
+  })
 
   if (isLoading) {
-    return <Skeleton className="h-48 w-full" />;
+    return <Skeleton className="h-48 w-full" />
   }
 
   if (error) {
-    return <div className="text-center text-red-500">商品の取得に失敗しました</div>;
+    return (
+      <div className="text-center text-red-500">商品の取得に失敗しました</div>
+    )
   }
 
   if (!product) {
-    return <div className="text-center">商品が見つかりませんでした</div>;
+    return <div className="text-center">商品が見つかりませんでした</div>
   }
 
   const details = [
@@ -44,17 +50,13 @@ function ProductDetailPage() {
     { label: '在庫数', value: product.stock },
     { label: '登録日', value: product.createdAt },
     { label: '更新日', value: product.updatedAt },
-  ];
+  ]
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link
-            from={Route.fullPath}
-            to="/_authenticated/products"
-            search={{}}
-          >
+          <Link from={Route.fullPath} to="/_authenticated/products" search={{}}>
             <Button variant="ghost" size="icon">
               <IconArrowLeft className="h-4 w-4" />
             </Button>
@@ -132,5 +134,5 @@ function ProductDetailPage() {
         </Card>
       </div>
     </div>
-  );
-} 
+  )
+}

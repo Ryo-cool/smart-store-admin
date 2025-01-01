@@ -41,7 +41,7 @@ const deliverySchema = z.object({
 type DeliveryFormValues = z.infer<typeof deliverySchema>;
 
 function DeliveryEditPage() {
-  const { deliveryId } = useParams({ from: Route.fullPath });
+  const { deliveryId } = useParams({ from: '/_authenticated/deliveries/$deliveryId/edit' });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

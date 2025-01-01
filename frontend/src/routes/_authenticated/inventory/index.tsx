@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { Link, createFileRoute } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
-import { IconSearch } from '@tabler/icons-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState } from 'react'
+import { Link, createFileRoute } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { IconSearch } from '@tabler/icons-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -11,21 +11,21 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Pagination } from '@/components/ui/pagination';
-import { productsApi } from '@/lib/api/products';
-import { InventoryUpdateDialog } from '@/components/inventory/update-dialog';
+} from '@/components/ui/table'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Pagination } from '@/components/ui/pagination'
+import { productsApi } from '@/lib/api/products'
+import { InventoryUpdateDialog } from '@/components/inventory/update-dialog'
 
-export const Route = createFileRoute('/_authenticated/inventory')({
+export const Route = createFileRoute('/_authenticated/inventory/')({
   component: InventoryPage,
-});
+})
 
-const PER_PAGE = 10;
+const PER_PAGE = 10
 
 function InventoryPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['products', { search: searchQuery, page: currentPage }],
@@ -35,9 +35,9 @@ function InventoryPage() {
         page: currentPage,
         perPage: PER_PAGE,
       }),
-  });
+  })
 
-  const totalPages = data ? Math.ceil(data.total / PER_PAGE) : 0;
+  const totalPages = data ? Math.ceil(data.total / PER_PAGE) : 0
 
   return (
     <div className="space-y-6">
@@ -126,10 +126,10 @@ function InventoryPage() {
                         product.status === '在庫少'
                           ? 'bg-yellow-100 text-yellow-800'
                           : product.status === '在庫切れ'
-                          ? 'bg-red-100 text-red-800'
-                          : product.status === '入荷待ち'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-green-100 text-green-800'
+                            ? 'bg-red-100 text-red-800'
+                            : product.status === '入荷待ち'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-green-100 text-green-800'
                       }`}
                     >
                       {product.status}
@@ -159,5 +159,5 @@ function InventoryPage() {
         </div>
       )}
     </div>
-  );
-} 
+  )
+}

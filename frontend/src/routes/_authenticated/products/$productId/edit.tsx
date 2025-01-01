@@ -1,4 +1,4 @@
-import { Link, useNavigate, useParams } from '@tanstack/react-router';
+import { Link, useNavigate, useParams, createFileRoute } from '@tanstack/react-router';
 import { IconArrowLeft } from '@tabler/icons-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -49,6 +49,10 @@ const categories = [
   { value: 'equipment', label: '器具・設備' },
   { value: 'accessories', label: 'アクセサリー' },
 ];
+
+export const Route = createFileRoute('/_authenticated/products/$productId/edit')({
+  component: EditProductPage,
+});
 
 export default function EditProductPage() {
   const { productId } = useParams({ from: '/_authenticated/products/$productId/edit' });
