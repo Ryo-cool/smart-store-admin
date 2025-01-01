@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -215,5 +216,176 @@ func TestGetActiveDeliveries(t *testing.T) {
 	assert.Len(t, deliveries, 2)
 	for _, d := range deliveries {
 		assert.True(t, d.Status == models.StatusPending || d.Status == models.StatusInProgress)
+	}
+}
+
+func TestGetDeliveryByID(t *testing.T) {
+	mockRepo := new(MockDeliveryRepository)
+	service := NewDeliveryService(mockRepo)
+	ctx := context.Background()
+	deliveryID := primitive.NewObjectID()
+
+	tests := []struct {
+		name    string
+		id      primitive.ObjectID
+		mockFn  func()
+		want    *models.Delivery
+		wantErr bool
+	}{
+		{
+			name: "正常な配送取得",
+			id:   deliveryID,
+			mockFn: func() {
+				expectedDelivery := &models.Delivery{
+					ID:      deliveryID,
+					RobotID: "ROBOT-001",
+					Status:  models.StatusInProgress,
+				}
+				mockRepo.On("GetByID", ctx, deliveryID).Return(expectedDelivery, nil)
+			},
+			want: &models.Delivery{
+				ID:      deliveryID,
+				RobotID: "ROBOT-001",
+				Status:  models.StatusInProgress,
+			},
+			wantErr: false,
+		},
+		{
+			name: "存在しない配送ID",
+			id:   primitive.NewObjectID(),
+			mockFn: func() {
+				mockRepo.On("GetByID", ctx, mock.AnythingOfType("primitive.ObjectID")).Return(nil, errors.New("delivery not found"))
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFn()
+			got, err := service.GetDeliveryByID(ctx, tt.id)
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, got)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func TestUpdateDeliveryLocation(t *testing.T) {
+	mockRepo := new(MockDeliveryRepository)
+	service := NewDeliveryService(mockRepo)
+	ctx := context.Background()
+	deliveryID := primitive.NewObjectID()
+
+	validLocation := models.Location{
+		Latitude:  35.6895,
+		Longitude: 139.6917,
+	}
+
+	tests := []struct {
+		name     string
+		id       primitive.ObjectID
+		location models.Location
+		mockFn   func()
+		wantErr  bool
+	}{
+		{
+			name:     "正常な位置更新",
+			id:       deliveryID,
+			location: validLocation,
+			mockFn: func() {
+				mockRepo.On("UpdateLocation", ctx, deliveryID, validLocation).Return(nil)
+			},
+			wantErr: false,
+		},
+		{
+			name: "無効な位置",
+			id:   deliveryID,
+			location: models.Location{
+				Latitude:  0,
+				Longitude: 0,
+			},
+			mockFn: func() {
+				mockRepo.On("UpdateLocation", ctx, deliveryID, models.Location{}).Return(errors.New("invalid location"))
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFn()
+			err := service.UpdateDeliveryLocation(ctx, tt.id, tt.location)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGetDeliveriesByRobot(t *testing.T) {
+	mockRepo := new(MockDeliveryRepository)
+	service := NewDeliveryService(mockRepo)
+	ctx := context.Background()
+
+	robotID := "ROBOT-001"
+	expectedDeliveries := []*models.Delivery{
+		{
+			ID:      primitive.NewObjectID(),
+			RobotID: robotID,
+			Status:  models.StatusCompleted,
+		},
+		{
+			ID:      primitive.NewObjectID(),
+			RobotID: robotID,
+			Status:  models.StatusInProgress,
+		},
+	}
+
+	tests := []struct {
+		name    string
+		robotID string
+		mockFn  func()
+		want    []*models.Delivery
+		wantErr bool
+	}{
+		{
+			name:    "正常な配送履歴取得",
+			robotID: robotID,
+			mockFn: func() {
+				mockRepo.On("GetDeliveriesByRobot", ctx, robotID).Return(expectedDeliveries, nil)
+			},
+			want:    expectedDeliveries,
+			wantErr: false,
+		},
+		{
+			name:    "存在しないロボットID",
+			robotID: "NONEXISTENT",
+			mockFn: func() {
+				mockRepo.On("GetDeliveriesByRobot", ctx, "NONEXISTENT").Return([]*models.Delivery{}, nil)
+			},
+			want:    []*models.Delivery{},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockFn()
+			got, err := service.GetDeliveriesByRobot(ctx, tt.robotID)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want, got)
+			}
+		})
 	}
 }
