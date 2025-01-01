@@ -5,9 +5,10 @@ import (
 	"log"
 	"time"
 
+	"smart-store-admin/backend/models"
+
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"smart-store-admin/backend/models"
 )
 
 const (
@@ -46,7 +47,7 @@ func NewMongoDB(uri string) (*MongoDB, error) {
 	// データベース取得
 	db := client.Database(defaultDBName)
 
-	// インデックスの設���
+	// インデックスの設定
 	if err := models.SetupIndexes(db); err != nil {
 		log.Printf("Failed to setup indexes: %v", err)
 		return nil, err
@@ -63,6 +64,11 @@ func (m *MongoDB) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultConnTimeout)
 	defer cancel()
 	return m.client.Disconnect(ctx)
+}
+
+// GetDB はデータベースインスタンスを返します
+func (m *MongoDB) GetDB() *mongo.Database {
+	return m.db
 }
 
 // GetCollection は指定されたコレクションを返します
