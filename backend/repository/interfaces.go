@@ -25,10 +25,13 @@ type DeliveryRepository interface {
 	Create(ctx context.Context, delivery *models.Delivery) error
 	GetByID(ctx context.Context, id primitive.ObjectID) (*models.Delivery, error)
 	List(ctx context.Context, skip, limit int64) ([]*models.Delivery, error)
+	Update(ctx context.Context, id primitive.ObjectID, delivery *models.Delivery) error
 	UpdateStatus(ctx context.Context, id primitive.ObjectID, status models.DeliveryStatus) error
 	UpdateLocation(ctx context.Context, id primitive.ObjectID, location models.Location) error
 	GetActiveDeliveries(ctx context.Context) ([]*models.Delivery, error)
 	GetDeliveriesByRobot(ctx context.Context, robotID string) ([]*models.Delivery, error)
+	GetDeliveries(query *models.DeliveryQuery) (*models.DeliveryResponse, error)
+	GetDeliveryHistory(ctx context.Context, id primitive.ObjectID) (*models.DeliveryHistoryResponse, error)
 }
 
 // SaleRepository は売上リポジトリのインターフェースを定義します

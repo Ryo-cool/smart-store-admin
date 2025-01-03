@@ -24,17 +24,17 @@ func main() {
 	// リポジトリの作成
 	productRepo := repository.NewProductRepository(mongodb.GetDB())
 	saleRepo := repository.NewSaleRepository(mongodb.GetDB())
-
+	deliveryRepo := repository.NewDeliveryRepository(mongodb.GetDB())
 	// サービスの作成
 	productService := service.NewProductService(productRepo)
 	saleService := service.NewSaleService(saleRepo, productRepo)
-
+	deliveryService := service.NewDeliveryService(deliveryRepo)
 	// ハンドラーの作成
 	productHandler := handler.NewProductHandler(productService)
 	saleHandler := handler.NewSaleHandler(saleService)
-
+	deliveryHandler := handler.NewDeliveryHandler(deliveryService)
 	// ルーターの設定
-	r := router.NewRouter(productHandler, saleHandler)
+	r := router.NewRouter(productHandler, saleHandler, deliveryHandler)
 
 	// サーバーの起動
 	if err := r.Start(":8080"); err != nil {

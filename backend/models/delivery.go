@@ -1,46 +1,79 @@
 package models
 
-import (
-	"time"
+import "time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-)
-
+// DeliveryStatus represents the status of a delivery
 type DeliveryStatus string
 
 const (
-	StatusPending    DeliveryStatus = "pending"
-	StatusInProgress DeliveryStatus = "in_progress"
-	StatusCompleted  DeliveryStatus = "completed"
-	StatusFailed     DeliveryStatus = "failed"
-	StatusCancelled  DeliveryStatus = "cancelled"
+	StatusPreparing  DeliveryStatus = "配送準備中"
+	StatusInProgress DeliveryStatus = "配送中"
+	StatusCompleted  DeliveryStatus = "配送完了"
+	StatusFailed     DeliveryStatus = "配送失敗"
 )
 
-type Location struct {
-	Latitude  float64 `bson:"latitude" json:"latitude"`
-	Longitude float64 `bson:"longitude" json:"longitude"`
+// ValidateDeliveryStatus checks if the given status is valid
+func ValidateDeliveryStatus(status string) bool {
+	switch DeliveryStatus(status) {
+	case StatusPreparing, StatusInProgress, StatusCompleted, StatusFailed:
+		return true
+	default:
+		return false
+	}
 }
 
+// Delivery represents a delivery record
 type Delivery struct {
-	ID      primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	RobotID string             `bson:"robot_id" json:"robotId"`
-	Status  DeliveryStatus     `bson:"status" json:"status"`
+	ID                    string         `json:"id" db:"id"`
+	DeliveryType          string         `json:"deliveryType" db:"delivery_type"`
+	Address               string         `json:"address" db:"address"`
+	EstimatedDeliveryTime time.Time      `json:"estimatedDeliveryTime" db:"estimated_delivery_time"`
+	ActualDeliveryTime    *time.Time     `json:"actualDeliveryTime,omitempty" db:"actual_delivery_time"`
+	Status                DeliveryStatus `json:"status" db:"status"`
+	Notes                 *string        `json:"notes,omitempty" db:"notes"`
+	TrackingInfo          *TrackingInfo  `json:"trackingInfo,omitempty" db:"-"`
+	CreatedAt             time.Time      `json:"createdAt" db:"created_at"`
+	UpdatedAt             time.Time      `json:"updatedAt" db:"updated_at"`
+}
 
-	// ロボット/ドローン情報
-	CurrentLocation Location `bson:"current_location" json:"currentLocation"`
-	BatteryLevel    float64  `bson:"battery_level" json:"batteryLevel"`
+// TrackingInfo represents the current tracking information of a delivery
+type TrackingInfo struct {
+	CurrentLocation *Location `json:"currentLocation,omitempty"`
+	BatteryLevel    *float64  `json:"batteryLevel,omitempty"`
+	Speed           *float64  `json:"speed,omitempty"`
+}
 
-	// 配送情報
-	StartLocation Location   `bson:"start_location" json:"startLocation"`
-	EndLocation   Location   `bson:"end_location" json:"endLocation"`
-	OptimalRoute  []Location `bson:"optimal_route" json:"optimalRoute"`
+// Location represents a geographical location
+type Location struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
 
-	// エネルギー効率
-	EnergyUsage     float64 `bson:"energy_usage" json:"energyUsage"`
-	DistanceCovered float64 `bson:"distance_covered" json:"distanceCovered"`
+// DeliveryHistory represents a historical record of delivery status changes
+type DeliveryHistory struct {
+	ID         string    `json:"id" db:"id"`
+	DeliveryID string    `json:"deliveryId" db:"delivery_id"`
+	Status     string    `json:"status" db:"status"`
+	Timestamp  time.Time `json:"timestamp" db:"timestamp"`
+	Location   *Location `json:"location,omitempty" db:"-"`
+	Note       *string   `json:"note,omitempty" db:"note"`
+}
 
-	StartedAt   time.Time  `bson:"started_at" json:"startedAt"`
-	CompletedAt *time.Time `bson:"completed_at,omitempty" json:"completedAt"`
-	CreatedAt   time.Time  `bson:"created_at" json:"createdAt"`
-	UpdatedAt   time.Time  `bson:"updated_at" json:"updatedAt"`
+// DeliveryQuery represents query parameters for filtering deliveries
+type DeliveryQuery struct {
+	Page   *int    `json:"page,omitempty"`
+	Limit  *int    `json:"limit,omitempty"`
+	Status *string `json:"status,omitempty"`
+	Search *string `json:"search,omitempty"`
+}
+
+// DeliveryResponse represents the response structure for delivery queries
+type DeliveryResponse struct {
+	Deliveries []Delivery `json:"deliveries"`
+	Total      int64      `json:"total"`
+}
+
+// DeliveryHistoryResponse represents the response structure for delivery history queries
+type DeliveryHistoryResponse struct {
+	History []DeliveryHistory `json:"history"`
 }
