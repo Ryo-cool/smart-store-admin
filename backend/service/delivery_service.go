@@ -44,6 +44,9 @@ func (s *DeliveryService) CreateDelivery(ctx context.Context, delivery *models.D
 	if delivery.Address == "" {
 		return errors.New("address is required")
 	}
+	if delivery.EstimatedDeliveryTime.IsZero() {
+		return errors.New("estimated delivery time is required")
+	}
 
 	// 初期状態の設定
 	delivery.Status = models.StatusPreparing
