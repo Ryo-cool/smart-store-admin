@@ -10,6 +10,7 @@ import (
 func NewRouter(
 	productHandler *handler.ProductHandler,
 	saleHandler *handler.SaleHandler,
+	deliveryHandler *handler.DeliveryHandler,
 ) *echo.Echo {
 	e := echo.New()
 
@@ -35,6 +36,14 @@ func NewRouter(
 	sales.GET("/daily", saleHandler.GetDailySales)
 	sales.GET("/range", saleHandler.GetSalesByDateRange)
 	sales.GET("/environmental-impact", saleHandler.GetEnvironmentalImpact)
+
+	// 配送関連のエンドポイント
+	deliveries := api.Group("/deliveries")
+	deliveries.GET("", deliveryHandler.GetDeliveries)
+	deliveries.GET("/:id", deliveryHandler.GetDelivery)
+	deliveries.PATCH("/:id", deliveryHandler.UpdateDelivery)
+	deliveries.PATCH("/:id/status", deliveryHandler.UpdateDeliveryStatus)
+	deliveries.GET("/:id/history", deliveryHandler.GetDeliveryHistory)
 
 	return e
 }

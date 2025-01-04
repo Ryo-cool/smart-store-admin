@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -59,15 +60,25 @@ func (m *MockDeliveryRepository) GetDeliveriesByRobot(ctx context.Context, robot
 	return args.Get(0).([]*models.Delivery), args.Error(1)
 }
 
+func (m *MockDeliveryRepository) GetDeliveries(query *models.DeliveryQuery) (*models.DeliveryResponse, error) {
+	args := m.Called(query)
+	return args.Get(0).(*models.DeliveryResponse), args.Error(1)
+}
+
+func (m *MockDeliveryRepository) GetDeliveryHistory(ctx context.Context, id primitive.ObjectID) (*models.DeliveryHistoryResponse, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(*models.DeliveryHistoryResponse), args.Error(1)
+}
+
+func (m *MockDeliveryRepository) Update(ctx context.Context, id primitive.ObjectID, delivery *models.Delivery) error {
+	args := m.Called(ctx, id, delivery)
+	return args.Error(0)
+}
+
 func TestCreateDelivery(t *testing.T) {
 	mockRepo := new(MockDeliveryRepository)
 	service := NewDeliveryService(mockRepo)
 	ctx := context.Background()
-
-	validLocation := models.Location{
-		Latitude:  35.6895,
-		Longitude: 139.6917,
-	}
 
 	tests := []struct {
 		name     string
@@ -78,11 +89,10 @@ func TestCreateDelivery(t *testing.T) {
 		{
 			name: "正常な配送作成",
 			delivery: &models.Delivery{
-				RobotID:       "ROBOT-001",
-				StartLocation: validLocation,
-				EndLocation:   validLocation,
-				BatteryLevel:  100.0,
-				EnergyUsage:   0.0,
+				DeliveryType:          "ロボット",
+				Address:               "東京都渋谷区",
+				EstimatedDeliveryTime: time.Now().Add(2 * time.Hour),
+				Status:                models.StatusPreparing,
 			},
 			mockFn: func() {
 				mockRepo.On("Create", ctx, mock.AnythingOfType("*models.Delivery")).Return(nil)
@@ -92,8 +102,7 @@ func TestCreateDelivery(t *testing.T) {
 		{
 			name: "ロボットIDなしでエラー",
 			delivery: &models.Delivery{
-				StartLocation: validLocation,
-				EndLocation:   validLocation,
+				Address: "東京都渋谷区",
 			},
 			mockFn:  func() {},
 			wantErr: true,
@@ -101,8 +110,8 @@ func TestCreateDelivery(t *testing.T) {
 		{
 			name: "開始位置なしでエラー",
 			delivery: &models.Delivery{
-				RobotID:     "ROBOT-001",
-				EndLocation: validLocation,
+				DeliveryType: "ロボット",
+				Address:      "東京都渋谷区",
 			},
 			mockFn:  func() {},
 			wantErr: true,
@@ -117,8 +126,7 @@ func TestCreateDelivery(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, models.StatusPending, tt.delivery.Status)
-				assert.Equal(t, tt.delivery.StartLocation, tt.delivery.CurrentLocation)
+				assert.Equal(t, models.StatusPreparing, tt.delivery.Status)
 			}
 		})
 	}
@@ -127,49 +135,48 @@ func TestCreateDelivery(t *testing.T) {
 func TestUpdateDeliveryStatus(t *testing.T) {
 	mockRepo := new(MockDeliveryRepository)
 	service := NewDeliveryService(mockRepo)
-	ctx := context.Background()
 	deliveryID := primitive.NewObjectID()
 
 	tests := []struct {
 		name          string
 		currentStatus models.DeliveryStatus
-		newStatus     models.DeliveryStatus
+		newStatus     string
 		mockFn        func()
 		wantErr       bool
 	}{
 		{
-			name:          "Pending から InProgress への遷移",
-			currentStatus: models.StatusPending,
-			newStatus:     models.StatusInProgress,
+			name:          "Preparing から InProgress への遷移",
+			currentStatus: models.StatusPreparing,
+			newStatus:     string(models.StatusInProgress),
 			mockFn: func() {
-				mockRepo.On("GetByID", ctx, deliveryID).Return(&models.Delivery{
-					ID:     deliveryID,
-					Status: models.StatusPending,
+				mockRepo.On("GetByID", mock.Anything, deliveryID).Return(&models.Delivery{
+					ID:     deliveryID.Hex(),
+					Status: models.StatusPreparing,
 				}, nil)
-				mockRepo.On("UpdateStatus", ctx, deliveryID, models.StatusInProgress).Return(nil)
+				mockRepo.On("UpdateStatus", mock.Anything, deliveryID, models.StatusInProgress).Return(nil)
 			},
 			wantErr: false,
 		},
 		{
 			name:          "InProgress から Completed への遷移",
 			currentStatus: models.StatusInProgress,
-			newStatus:     models.StatusCompleted,
+			newStatus:     string(models.StatusCompleted),
 			mockFn: func() {
-				mockRepo.On("GetByID", ctx, deliveryID).Return(&models.Delivery{
-					ID:     deliveryID,
+				mockRepo.On("GetByID", mock.Anything, deliveryID).Return(&models.Delivery{
+					ID:     deliveryID.Hex(),
 					Status: models.StatusInProgress,
 				}, nil)
-				mockRepo.On("UpdateStatus", ctx, deliveryID, models.StatusCompleted).Return(nil)
+				mockRepo.On("UpdateStatus", mock.Anything, deliveryID, models.StatusCompleted).Return(nil)
 			},
 			wantErr: false,
 		},
 		{
 			name:          "Completed から InProgress への無効な遷移",
 			currentStatus: models.StatusCompleted,
-			newStatus:     models.StatusInProgress,
+			newStatus:     string(models.StatusInProgress),
 			mockFn: func() {
-				mockRepo.On("GetByID", ctx, deliveryID).Return(&models.Delivery{
-					ID:     deliveryID,
+				mockRepo.On("GetByID", mock.Anything, deliveryID).Return(&models.Delivery{
+					ID:     deliveryID.Hex(),
 					Status: models.StatusCompleted,
 				}, nil)
 			},
@@ -181,7 +188,7 @@ func TestUpdateDeliveryStatus(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo.ExpectedCalls = nil
 			tt.mockFn()
-			err := service.UpdateDeliveryStatus(ctx, deliveryID, tt.newStatus)
+			err := service.UpdateDeliveryStatus(deliveryID.Hex(), tt.newStatus)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -198,14 +205,14 @@ func TestGetActiveDeliveries(t *testing.T) {
 
 	expectedDeliveries := []*models.Delivery{
 		{
-			ID:      primitive.NewObjectID(),
-			RobotID: "ROBOT-001",
-			Status:  models.StatusPending,
+			ID:           primitive.NewObjectID().Hex(),
+			DeliveryType: "ロボット",
+			Status:       models.StatusPreparing,
 		},
 		{
-			ID:      primitive.NewObjectID(),
-			RobotID: "ROBOT-002",
-			Status:  models.StatusInProgress,
+			ID:           primitive.NewObjectID().Hex(),
+			DeliveryType: "ロボット",
+			Status:       models.StatusInProgress,
 		},
 	}
 
@@ -216,7 +223,7 @@ func TestGetActiveDeliveries(t *testing.T) {
 	assert.Equal(t, expectedDeliveries, deliveries)
 	assert.Len(t, deliveries, 2)
 	for _, d := range deliveries {
-		assert.True(t, d.Status == models.StatusPending || d.Status == models.StatusInProgress)
+		assert.True(t, d.Status == models.StatusPreparing || d.Status == models.StatusInProgress)
 	}
 }
 
@@ -238,16 +245,16 @@ func TestGetDeliveryByID(t *testing.T) {
 			id:   deliveryID,
 			mockFn: func() {
 				expectedDelivery := &models.Delivery{
-					ID:      deliveryID,
-					RobotID: "ROBOT-001",
-					Status:  models.StatusInProgress,
+					ID:           deliveryID.Hex(),
+					DeliveryType: "ロボット",
+					Status:       models.StatusInProgress,
 				}
 				mockRepo.On("GetByID", ctx, deliveryID).Return(expectedDelivery, nil)
 			},
 			want: &models.Delivery{
-				ID:      deliveryID,
-				RobotID: "ROBOT-001",
-				Status:  models.StatusInProgress,
+				ID:           deliveryID.Hex(),
+				DeliveryType: "ロボット",
+				Status:       models.StatusInProgress,
 			},
 			wantErr: false,
 		},
@@ -339,14 +346,14 @@ func TestGetDeliveriesByRobot(t *testing.T) {
 	robotID := "ROBOT-001"
 	expectedDeliveries := []*models.Delivery{
 		{
-			ID:      primitive.NewObjectID(),
-			RobotID: robotID,
-			Status:  models.StatusCompleted,
+			ID:           primitive.NewObjectID().Hex(),
+			DeliveryType: "ロボット",
+			Status:       models.StatusCompleted,
 		},
 		{
-			ID:      primitive.NewObjectID(),
-			RobotID: robotID,
-			Status:  models.StatusInProgress,
+			ID:           primitive.NewObjectID().Hex(),
+			DeliveryType: "ロボット",
+			Status:       models.StatusInProgress,
 		},
 	}
 

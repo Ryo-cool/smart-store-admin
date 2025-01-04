@@ -58,17 +58,17 @@ export interface DeliveryHistory {
 
 export const deliveriesApi = {
   getDeliveries: (query?: DeliveryQuery) =>
-    api.get<DeliveryResponse>('/deliveries', { params: query }).then((res) => res.data),
+    api.get<DeliveryResponse>('/api/deliveries', { params: query }).then((res) => res.data),
 
   getDelivery: (id: string) =>
-    api.get<Delivery>(`/deliveries/${id}`).then((res) => res.data),
+    api.get<Delivery>(`/api/deliveries/${id}`).then((res) => res.data),
 
   updateDelivery: (id: string, data: DeliveryUpdateRequest) =>
-    api.patch<Delivery>(`/deliveries/${id}`, data).then((res) => res.data),
+    api.patch<Delivery>(`/api/deliveries/${id}`, data).then((res) => res.data),
 
   updateDeliveryStatus: (id: string, status: string) =>
-    api.patch<Delivery>(`/deliveries/${id}/status`, { status }).then((res) => res.data),
+    api.patch<Delivery>(`/api/deliveries/${id}/status`, { status }).then((res) => res.data),
 
   getDeliveryHistory: (id: string) =>
-    api.get<DeliveryHistory>(`/deliveries/${id}/history`).then((res) => res.data),
+    api.get<DeliveryHistory>(`/api/deliveries/${id}/history`).then((res) => res.data),
 }; 

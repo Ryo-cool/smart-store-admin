@@ -19,6 +19,9 @@ type DeliveryServiceInterface interface {
 	UpdateDeliveryLocation(ctx context.Context, id primitive.ObjectID, location models.Location) error
 	GetActiveDeliveries(ctx context.Context) ([]*models.Delivery, error)
 	GetDeliveriesByRobot(ctx context.Context, robotID string) ([]*models.Delivery, error)
+	GetDeliveries(query *models.DeliveryQuery) (*models.DeliveryResponse, error)
+	GetDeliveryHistory(id string) (*models.DeliveryHistoryResponse, error)
+	UpdateDelivery(id string, delivery *models.Delivery) error
 }
 
 // DeliveryService は配送サービスを表します
@@ -35,27 +38,32 @@ func NewDeliveryService(repo repository.DeliveryRepository) *DeliveryService {
 
 // CreateDelivery は新しい配送を作成します
 func (s *DeliveryService) CreateDelivery(ctx context.Context, delivery *models.Delivery) error {
-	if delivery.RobotID == "" {
-		return errors.New("robot ID is required")
+	if delivery.DeliveryType == "" {
+		return errors.New("delivery type is required")
 	}
-	if delivery.StartLocation == (models.Location{}) {
-		return errors.New("start location is required")
+	if delivery.Address == "" {
+		return errors.New("address is required")
 	}
-	if delivery.EndLocation == (models.Location{}) {
-		return errors.New("end location is required")
+	if delivery.EstimatedDeliveryTime.IsZero() {
+		return errors.New("estimated delivery time is required")
 	}
 
 	// 初期状態の設定
-	delivery.Status = models.StatusPending
-	delivery.StartedAt = time.Now()
-	delivery.CurrentLocation = delivery.StartLocation
+	delivery.Status = models.StatusPreparing
+	delivery.CreatedAt = time.Now()
+	delivery.UpdatedAt = time.Now()
 
 	return s.repo.Create(ctx, delivery)
 }
 
 // GetDelivery は指定されたIDの配送を取得します
-func (s *DeliveryService) GetDelivery(ctx context.Context, id primitive.ObjectID) (*models.Delivery, error) {
-	return s.repo.GetByID(ctx, id)
+func (s *DeliveryService) GetDelivery(id string) (*models.Delivery, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	return s.repo.GetByID(ctx, objectID)
 }
 
 // ListDeliveries は配送のリストを取得します
@@ -77,8 +85,19 @@ func (s *DeliveryService) GetDeliveryByID(ctx context.Context, id primitive.Obje
 }
 
 // UpdateDeliveryStatus は配送のステータスを更新します
-func (s *DeliveryService) UpdateDeliveryStatus(ctx context.Context, id primitive.ObjectID, status models.DeliveryStatus) error {
-	delivery, err := s.repo.GetByID(ctx, id)
+func (s *DeliveryService) UpdateDeliveryStatus(id string, status string) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	deliveryStatus := models.DeliveryStatus(status)
+	if !models.ValidateDeliveryStatus(status) {
+		return errors.New("invalid status")
+	}
+
+	ctx := context.Background()
+	delivery, err := s.repo.GetByID(ctx, objectID)
 	if err != nil {
 		return err
 	}
@@ -86,21 +105,11 @@ func (s *DeliveryService) UpdateDeliveryStatus(ctx context.Context, id primitive
 		return errors.New("delivery not found")
 	}
 
-	// ステータスの遷移チェック
-	if !isValidStatusTransition(delivery.Status, status) {
+	if !isValidStatusTransition(delivery.Status, deliveryStatus) {
 		return errors.New("invalid status transition")
 	}
 
-	// ステータスが完了に変更される場合、完了時刻を設定
-	if status == models.StatusCompleted {
-		now := time.Now()
-		delivery.CompletedAt = &now
-		delivery.Status = status
-		return s.repo.UpdateStatus(ctx, id, status)
-	}
-
-	delivery.Status = status
-	return s.repo.UpdateStatus(ctx, id, status)
+	return s.repo.UpdateStatus(ctx, objectID, deliveryStatus)
 }
 
 // UpdateDeliveryLocation は配送の現在位置を更新します
@@ -124,21 +133,43 @@ func (s *DeliveryService) GetDeliveriesByRobot(ctx context.Context, robotID stri
 	return s.repo.GetDeliveriesByRobot(ctx, robotID)
 }
 
+// GetDeliveries retrieves deliveries based on the query parameters
+func (s *DeliveryService) GetDeliveries(query *models.DeliveryQuery) (*models.DeliveryResponse, error) {
+	return s.repo.GetDeliveries(query)
+}
+
+// GetDeliveryHistory は配送履歴を取得します
+func (s *DeliveryService) GetDeliveryHistory(id string) (*models.DeliveryHistoryResponse, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	return s.repo.GetDeliveryHistory(ctx, objectID)
+}
+
+// UpdateDelivery は配送情報を更新します
+func (s *DeliveryService) UpdateDelivery(id string, delivery *models.Delivery) error {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	ctx := context.Background()
+	return s.repo.Update(ctx, objectID, delivery)
+}
+
 // isValidStatusTransition はステータスの遷移が有効かどうかをチェックします
 func isValidStatusTransition(current, new models.DeliveryStatus) bool {
 	validTransitions := map[models.DeliveryStatus][]models.DeliveryStatus{
-		models.StatusPending: {
+		models.StatusPreparing: {
 			models.StatusInProgress,
-			models.StatusCancelled,
 			models.StatusFailed,
 		},
 		models.StatusInProgress: {
 			models.StatusCompleted,
-			models.StatusCancelled,
 			models.StatusFailed,
 		},
 		models.StatusCompleted: {}, // 完了状態からの遷移は不可
-		models.StatusCancelled: {}, // キャンセル状態からの遷移は不可
 		models.StatusFailed:    {}, // 失敗状態からの遷移は不可
 	}
 

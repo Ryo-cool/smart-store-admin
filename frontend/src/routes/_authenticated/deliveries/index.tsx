@@ -36,11 +36,14 @@ export const Route = createFileRoute('/_authenticated/deliveries/')({
 
 function DeliveriesPage() {
   const [search, setSearch] = useState('')
-  const [status, setStatus] = useState<string | undefined>()
+  const [status, setStatus] = useState<string | 'all' | undefined>('all')
 
   const { data, isLoading } = useQuery({
-    queryKey: ['deliveries', { search, status }],
-    queryFn: () => deliveriesApi.getDeliveries({ search, status }),
+    queryKey: ['deliveries', search, status],
+    queryFn: () => deliveriesApi.getDeliveries({ 
+      search, 
+      status: status === 'all' ? undefined : status 
+    }),
   })
 
   return (
@@ -61,7 +64,7 @@ function DeliveriesPage() {
             <SelectValue placeholder="ステータスで絞り込み" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">すべて</SelectItem>
+            <SelectItem value="all">すべて</SelectItem>
             <SelectItem value="配送準備中">配送準備中</SelectItem>
             <SelectItem value="配送中">配送中</SelectItem>
             <SelectItem value="配送完了">配送完了</SelectItem>
@@ -114,7 +117,7 @@ function DeliveriesPage() {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Link
-                        to="$deliveryId"
+                        to="/deliveries/$deliveryId"
                         params={{ deliveryId: delivery.id }}
                       >
                         <Button variant="ghost" size="icon">
@@ -122,7 +125,7 @@ function DeliveriesPage() {
                         </Button>
                       </Link>
                       <Link
-                        to="$deliveryId/edit"
+                        to="/deliveries/$deliveryId/edit"
                         params={{ deliveryId: delivery.id }}
                       >
                         <Button variant="ghost" size="icon">
