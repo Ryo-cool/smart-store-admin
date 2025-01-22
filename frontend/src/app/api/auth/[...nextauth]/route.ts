@@ -1,11 +1,11 @@
-import NextAuth, { NextAuthOptions, Account, DefaultUser } from 'next-auth'
+import { NextAuthOptions } from 'next-auth'
+import NextAuth from 'next-auth/next'
 import GoogleProvider from 'next-auth/providers/google'
-import { auth } from '@/lib/auth/auth'
-import { JWT } from 'next-auth/jwt'
-import { Session } from 'next-auth'
-import { User } from '@/lib/auth/types'
+import { User, Role } from '@/lib/auth/types'
 
-const authOptions: NextAuthOptions = {
+const allowedDomains = process.env.ALLOWED_EMAIL_DOMAINS?.split(',') || []
+
+export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -13,47 +13,37 @@ const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ account }: { account: Account | null }) {
-      if (account?.provider === 'google' && account.access_token) {
-        try {
-          await auth.handleCallback(account.access_token)
-          return true
-        } catch (error) {
-          if (process.env.NODE_ENV === 'development') {
-            // eslint-disable-next-line no-console
-            console.error('Authentication error:', error)
-          }
-          return false
-        }
-      }
-      return false
+    async signIn({ user, account }) {
+      if (account?.provider !== 'google') return false
+
+      const email = user.email
+      if (!email) return false
+
+      const domain = email.split('@')[1]
+      if (!domain) return false
+
+      return allowedDomains.includes(domain)
     },
-    async jwt({ token, user, account }) {
-      if (account?.provider === 'google' && account.access_token) {
-        try {
-          const response = await auth.handleCallback(account.access_token)
-          return {
-            ...token,
-            accessToken: response.token,
-            user: response.user,
-          }
-        } catch (error) {
-          return token
+    async jwt({ token, user }) {
+      if (user) {
+        token.user = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          picture: user.image ?? null,
+          role: 'admin' as Role,
         }
       }
       return token
     },
     async session({ session, token }) {
-      return {
-        ...session,
-        accessToken: (token as JWT & { accessToken: string }).accessToken,
-        user: (token as JWT & { user: User }).user,
-      }
+      session.accessToken = token.accessToken as string
+      session.user = token.user
+      return session
     },
   },
   pages: {
     signIn: '/auth/signin',
-    error: '/auth/error',
   },
 }
 
