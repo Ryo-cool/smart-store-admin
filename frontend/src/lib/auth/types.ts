@@ -2,9 +2,9 @@ export type Role = 'admin' | 'staff' | 'viewer'
 
 export interface User {
   id: string
-  email: string
-  name: string
-  picture: string
+  email: string | null
+  name: string | null
+  picture: string | null
   role: Role
 }
 
