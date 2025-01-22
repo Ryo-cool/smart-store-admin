@@ -28,7 +28,7 @@ func NewAuthHandler(userRepo repository.UserRepository, authConfig *config.AuthC
 	oauth2Config := &oauth2.Config{
 		ClientID:     authConfig.GoogleClientID,
 		ClientSecret: authConfig.GoogleClientSecret,
-		RedirectURL:  "http://localhost:3000/api/auth/callback/google", // TODO: 環境変数化
+		RedirectURL:  authConfig.GoogleRedirectURL,
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.email",
 			"https://www.googleapis.com/auth/userinfo.profile",
