@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"smart-store-admin/backend/models"
+	"github.com/onoderaryou/smart-store-admin/backend/models"
 
 	"github.com/labstack/echo/v4"
 )

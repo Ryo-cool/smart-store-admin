@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"smart-store-admin/backend/models"
+	"github.com/onoderaryou/smart-store-admin/backend/models"
 )
 
 type mockProductService struct {

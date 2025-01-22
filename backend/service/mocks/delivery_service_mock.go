@@ -7,7 +7,8 @@ package mock_service
 import (
 	context "context"
 	reflect "reflect"
-	models "smart-store-admin/backend/models"
+
+	"github.com/onoderaryou/smart-store-admin/backend/models"
 
 	gomock "github.com/golang/mock/gomock"
 	primitive "go.mongodb.org/mongo-driver/bson/primitive"

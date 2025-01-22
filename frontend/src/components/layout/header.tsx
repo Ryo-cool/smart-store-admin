@@ -1,33 +1,71 @@
-import { IconBell, IconSearch } from '@tabler/icons-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+'use client'
+
+import { useSession, signOut } from 'next-auth/react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 export function Header() {
+  const { data: session, status } = useSession()
+
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-white px-6">
-      <div className="flex items-center gap-4">
-        <div className="w-72">
-          <div className="relative">
-            <IconSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              type="search"
-              placeholder="検索..."
-              className="w-full pl-9"
-            />
-          </div>
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 items-center">
+        <div className="mr-4 flex">
+          <Link href="/" className="mr-6 flex items-center space-x-2">
+            <span className="font-bold">NEXT MART 2030</span>
+          </Link>
+        </div>
+
+        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+          <nav className="flex items-center space-x-2">
+            {status === 'authenticated' && session?.user ? (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link href="/dashboard">ダッシュボード</Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                  <Link href="/products">商品管理</Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                  <Link href="/sales">売上管理</Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                  <Link href="/deliveries">配送管理</Link>
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={session.user.picture || ''} alt={session.user.name || ''} />
+                        <AvatarFallback>{session.user.name?.[0] || 'U'}</AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem className="font-medium">
+                      {session.user.name || 'ユーザー'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => signOut()}>
+                      ログアウト
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <Button asChild>
+                <Link href="/auth/signin">ログイン</Link>
+              </Button>
+            )}
+          </nav>
         </div>
       </div>
-
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative"
-        >
-          <IconBell className="h-5 w-5" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
-        </Button>
-      </div>
     </header>
-  );
+  )
 }

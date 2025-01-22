@@ -7,8 +7,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"smart-store-admin/backend/models"
-	"smart-store-admin/backend/service"
+	"github.com/onoderaryou/smart-store-admin/backend/models"
+	"github.com/onoderaryou/smart-store-admin/backend/service"
 )
 
 type SaleHandler struct {

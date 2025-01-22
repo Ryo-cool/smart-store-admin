@@ -3,8 +3,9 @@ package service
 import (
 	"context"
 	"errors"
-	"smart-store-admin/backend/models"
-	"smart-store-admin/backend/repository"
+
+	"github.com/onoderaryou/smart-store-admin/backend/models"
+	"github.com/onoderaryou/smart-store-admin/backend/repository"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
