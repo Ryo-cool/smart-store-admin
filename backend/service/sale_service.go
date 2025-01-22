@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"smart-store-admin/backend/models"
-	"smart-store-admin/backend/repository"
+	"github.com/onoderaryou/smart-store-admin/backend/models"
+	"github.com/onoderaryou/smart-store-admin/backend/repository"
 )
 
 type SaleServiceInterface interface {

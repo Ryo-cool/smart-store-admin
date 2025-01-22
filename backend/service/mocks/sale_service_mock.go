@@ -7,8 +7,9 @@ package mock_service
 import (
 	context "context"
 	reflect "reflect"
-	models "smart-store-admin/backend/models"
 	time "time"
+
+	"github.com/onoderaryou/smart-store-admin/backend/models"
 
 	gomock "github.com/golang/mock/gomock"
 )

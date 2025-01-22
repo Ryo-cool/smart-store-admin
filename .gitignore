@@ -70,3 +70,6 @@ local.properties
 
 # Project documentation
 *.md
+
+# Local progress tracking
+progress.local.md

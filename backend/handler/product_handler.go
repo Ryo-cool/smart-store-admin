@@ -8,8 +8,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"smart-store-admin/backend/models"
-	"smart-store-admin/backend/service"
+	"github.com/onoderaryou/smart-store-admin/backend/models"
+	"github.com/onoderaryou/smart-store-admin/backend/service"
 )
 
 type ProductHandler struct {

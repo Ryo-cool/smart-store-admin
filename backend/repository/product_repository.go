@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"smart-store-admin/backend/models"
+	"github.com/onoderaryou/smart-store-admin/backend/models"
 )
 
 // ProductRepositoryImpl は商品リポジトリの実装です

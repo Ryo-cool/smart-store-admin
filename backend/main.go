@@ -2,12 +2,13 @@ package main
 
 import (
 	"log"
-	"smart-store-admin/backend/config"
-	"smart-store-admin/backend/db"
-	"smart-store-admin/backend/handler"
-	"smart-store-admin/backend/repository"
-	"smart-store-admin/backend/router"
-	"smart-store-admin/backend/service"
+
+	"github.com/onoderaryou/smart-store-admin/backend/config"
+	"github.com/onoderaryou/smart-store-admin/backend/db"
+	"github.com/onoderaryou/smart-store-admin/backend/handler"
+	"github.com/onoderaryou/smart-store-admin/backend/repository"
+	"github.com/onoderaryou/smart-store-admin/backend/router"
+	"github.com/onoderaryou/smart-store-admin/backend/service"
 )
 
 func main() {

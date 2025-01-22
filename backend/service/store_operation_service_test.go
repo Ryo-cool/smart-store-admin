@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"smart-store-admin/backend/models"
-	"smart-store-admin/backend/repository"
+	"github.com/onoderaryou/smart-store-admin/backend/models"
+	"github.com/onoderaryou/smart-store-admin/backend/repository"
 )
 
 // MockStoreOperationRepository はrepository.StoreOperationRepositoryインターフェースのモック実装です

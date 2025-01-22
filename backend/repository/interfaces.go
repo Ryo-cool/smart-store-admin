@@ -6,7 +6,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"smart-store-admin/backend/models"
+	"github.com/onoderaryou/smart-store-admin/backend/models"
 )
 
 // ProductRepository は商品リポジトリのインターフェースを定義します

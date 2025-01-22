@@ -4,8 +4,46 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	"smart-store-admin/backend/handler"
+	"github.com/onoderaryou/smart-store-admin/backend/config"
+	"github.com/onoderaryou/smart-store-admin/backend/handler"
+	authmw "github.com/onoderaryou/smart-store-admin/backend/middleware"
 )
+
+func SetupRouter(e *echo.Echo, authHandler *handler.AuthHandler, authConfig *config.AuthConfig) {
+	// ミドルウェアの設定
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.Use(middleware.CORS())
+
+	// 認証不要のルート
+	SetupAuthRoutes(e, authHandler)
+
+	// 認証が必要なルート
+	api := e.Group("/api")
+	api.Use(authmw.AuthMiddleware(authConfig))
+	{
+		// 管理者のみアクセス可能
+		admin := api.Group("/admin")
+		admin.Use(authmw.RequireRole("admin"))
+		{
+			// TODO: 管理者用エンドポイントの追加
+		}
+
+		// スタッフ以上がアクセス可能
+		staff := api.Group("/staff")
+		staff.Use(authmw.RequireRole("admin", "staff"))
+		{
+			// TODO: スタッフ用エンドポイントの追加
+		}
+
+		// 一般ユーザーがアクセス可能
+		userGroup := api.Group("/user")
+		{
+			// TODO: 一般ユーザー用エンドポイントの追加
+			userGroup.GET("/profile", authHandler.GetCurrentUser)
+		}
+	}
+}
 
 func NewRouter(
 	productHandler *handler.ProductHandler,

@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"smart-store-admin/backend/models"
+	"github.com/onoderaryou/smart-store-admin/backend/models"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
