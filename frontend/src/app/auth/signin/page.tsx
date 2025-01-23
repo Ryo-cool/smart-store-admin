@@ -3,8 +3,17 @@
 import { signIn } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { Suspense } from 'react'
 
 export default function SignIn() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignInContent />
+    </Suspense>
+  )
+}
+
+function SignInContent() {
   const searchParams = useSearchParams()
   const from = searchParams.get('from') || '/dashboard'
 

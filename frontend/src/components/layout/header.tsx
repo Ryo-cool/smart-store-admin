@@ -10,13 +10,23 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { cn } from '@/lib/utils'
 
-export function Header() {
+interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
+  fixed?: boolean
+  children?: React.ReactNode
+}
+
+export function Header({ fixed, children, ...props }: HeaderProps) {
   const { data: session, status } = useSession()
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className={cn(
+      "sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+      fixed && "header-fixed fixed top-0 z-50"
+    )} {...props}>
       <div className="container flex h-14 items-center">
+        {children}
         <div className="mr-4 flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <span className="font-bold">NEXT MART 2030</span>
