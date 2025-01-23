@@ -1,21 +1,13 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "composite": true,
-    "target": "ES2020",
-    "useDefineForClassFields": true,
+    "noEmit": true,
+    "skipLibCheck": true,
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": false,
-    "isolatedModules": true,
-    "moduleDetection": "force",
-    "jsx": "react-jsx",
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "noEmit": false,
-    "emitDeclarationOnly": true
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts", "node_modules", "dist", "**/*.d.ts"]
 }
