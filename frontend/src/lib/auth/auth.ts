@@ -24,8 +24,11 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.user = {
-          ...user,
-          role: 'admin' as Role,
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          picture: user.picture || undefined,
+          role: 'admin' as Role
         }
       }
       return token

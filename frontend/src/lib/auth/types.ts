@@ -2,8 +2,9 @@ import type { DefaultSession } from 'next-auth'
 
 declare module 'next-auth' {
   interface Session {
-    accessToken?: string
+    accessToken: string | undefined
     user: {
+      id?: string
       role?: string
       picture?: string
     } & DefaultSession['user']
@@ -12,8 +13,9 @@ declare module 'next-auth' {
 
 declare module 'next-auth/jwt' {
   interface JWT {
-    accessToken?: string
-    user?: {
+    accessToken: string | undefined
+    user: {
+      id?: string
       role?: string
       picture?: string
     } & DefaultSession['user']
@@ -36,6 +38,12 @@ export interface Session {
 }
 
 export interface AuthResponse {
-  token: string
-  user: User
+  accessToken: string
+  user: {
+    id: string
+    email: string
+    name: string
+    role: Role
+    picture?: string
+  }
 } 
