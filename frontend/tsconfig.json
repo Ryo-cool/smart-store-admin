@@ -36,17 +36,17 @@
         "./src/*"
       ]
     },
-    "declaration": true,
-    "declarationDir": "./dist/types/generated",
-    "outDir": "./dist",
-    "emitDeclarationOnly": true
+    "noEmit": true
   },
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist",
+    "**/dist/**"
   ],
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx"
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".next/types/**/*.ts"
   ]
 }
