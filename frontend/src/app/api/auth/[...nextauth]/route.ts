@@ -1,11 +1,11 @@
 import { NextAuthOptions } from 'next-auth'
 import NextAuth from 'next-auth/next'
 import GoogleProvider from 'next-auth/providers/google'
-import { User, Role } from '@/lib/auth/types'
+import { Role } from '@/lib/auth/types'
 
 const allowedDomains = process.env.ALLOWED_EMAIL_DOMAINS?.split(',') || []
 
-export const authOptions: NextAuthOptions = {
+const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -49,4 +49,7 @@ export const authOptions: NextAuthOptions = {
 
 const handler = NextAuth(authOptions)
 
-export { handler as GET, handler as POST } 
+// Next.js Edge API Routes: https://nextjs.org/docs/app/building-your-application/routing/router-handlers#edge-and-nodejs-runtimes
+export const dynamic = 'force-dynamic'
+export const GET = handler
+export const POST = handler 

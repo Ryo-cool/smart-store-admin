@@ -22,9 +22,9 @@ import {
 } from '@/components/ui/form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { deliveriesApi } from '@/lib/api/deliveries';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useForm } from 'react-hook-form';
 
 export const Route = createFileRoute('/_authenticated/deliveries/$deliveryId/edit')({
   component: DeliveryEditPage,
@@ -106,7 +106,7 @@ function DeliveryEditPage() {
 
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit((data) => updateDelivery(data))}
+          onSubmit={form.handleSubmit((data: DeliveryFormValues) => updateDelivery(data))}
           className="space-y-6"
         >
           <FormField

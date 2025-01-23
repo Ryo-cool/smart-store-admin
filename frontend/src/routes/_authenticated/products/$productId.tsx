@@ -1,5 +1,5 @@
 import { Link, useParams, createFileRoute } from '@tanstack/react-router';
-import { IconArrowLeft, IconEdit, IconPackage } from '@tabler/icons-react';
+import { IconArrowLeft, IconPackage } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import {
@@ -58,7 +58,7 @@ function ProductDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link to="..">
+          <Link to=".." search={{}}>
             <Button variant="ghost" size="icon">
               <IconArrowLeft className="h-4 w-4" />
             </Button>
@@ -79,12 +79,6 @@ function ProductDetailPage() {
               </Button>
             }
           />
-          <Link to="edit">
-            <Button>
-              <IconEdit className="mr-2 h-4 w-4" />
-              編集
-            </Button>
-          </Link>
         </div>
       </div>
 

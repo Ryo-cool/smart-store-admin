@@ -56,7 +56,7 @@ function ProductDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link from={Route.fullPath} to="/_authenticated/products" search={{}}>
+          <Link to=".." search={{}}>
             <Button variant="ghost" size="icon">
               <IconArrowLeft className="h-4 w-4" />
             </Button>
@@ -67,8 +67,7 @@ function ProductDetailPage() {
           </div>
         </div>
         <Link
-          from={Route.fullPath}
-          to="/_authenticated/products/$productId/edit"
+          to="/products/$productId/edit"
           params={{ productId }}
           search={{}}
         >
