@@ -1,4 +1,5 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "incremental": true,
     "composite": true,
@@ -10,18 +11,11 @@
     "skipLibCheck": true,
 
     /* Bundler mode */
-    "moduleResolution": "Bundler",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
     "isolatedModules": true,
     "moduleDetection": "force",
     "jsx": "react-jsx",
-    "allowJs": true,
-    "esModuleInterop": true,
-
-    /* Alias */
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
 
     /* Linting */
     "strict": true,
@@ -34,8 +28,8 @@
     "declarationDir": "./dist/types",
     "outDir": "./dist",
     "emitDeclarationOnly": true,
-    "resolveJsonModule": true
+    "noEmit": false
   },
   "include": ["src/**/*", "src/**/*.json"],
-  "exclude": ["node_modules", "dist", "types"]
+  "exclude": ["node_modules", "dist"]
 }

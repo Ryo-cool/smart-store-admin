@@ -5,7 +5,7 @@ import { Role } from '@/lib/auth/types'
 
 const allowedDomains = process.env.ALLOWED_EMAIL_DOMAINS?.split(',') || []
 
-const authOptions: NextAuthOptions = {
+const options: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -47,7 +47,7 @@ const authOptions: NextAuthOptions = {
   },
 }
 
-const handler = NextAuth(authOptions)
+const handler = NextAuth(options)
 
 // Next.js Edge API Routes: https://nextjs.org/docs/app/building-your-application/routing/router-handlers#edge-and-nodejs-runtimes
 export const dynamic = 'force-dynamic'

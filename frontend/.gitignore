@@ -12,7 +12,6 @@ dist
 dist-ssr
 *.local
 .next
-types
 
 # Editor directories and files
 .vscode/*
@@ -24,3 +23,6 @@ types
 *.njsproj
 *.sln
 *.sw?
+
+# TypeScript
+*.tsbuildinfo
