@@ -8,10 +8,15 @@ import (
 type Product struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	Name        string             `bson:"name" json:"name"`
+	SKU         string             `bson:"sku" json:"sku"`
 	Price       float64            `bson:"price" json:"price"`
 	Stock       int                `bson:"stock" json:"stock"`
+	Status      string             `bson:"status" json:"status"`
 	Category    string             `bson:"category" json:"category"`
 	Description string             `bson:"description" json:"description"`
+	Weight      string             `bson:"weight" json:"weight"`
+	Dimensions  string             `bson:"dimensions" json:"dimensions"`
+	Images      []string           `bson:"images" json:"images"`
 
 	// 環境負荷関連
 	CO2Emission float64 `bson:"co2_emission" json:"co2Emission"`
