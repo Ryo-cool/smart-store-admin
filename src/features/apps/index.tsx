@@ -121,7 +121,7 @@ export default function Apps() {
                 <div
                   className={`flex size-10 items-center justify-center rounded-lg bg-muted p-2`}
                 >
-                  {app.logo}
+                  <app.logo />
                 </div>
                 <Button
                   variant='outline'
