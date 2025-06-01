@@ -9,11 +9,16 @@ export interface Product {
   price: number;
   stock: number;
   status: '販売中' | '在庫切れ' | '入荷待ち' | '在庫少';
-  description?: string;
-  category?: string;
-  weight?: string;
-  dimensions?: string;
-  images?: string[];
+  description: string;
+  category: string;
+  weight: string;
+  dimensions: string;
+  images: string[];
+  co2Emission: number;
+  recycleRate: number;
+  shelfLocation: string;
+  minStockLevel: number;
+  reorderPoint: number;
   createdAt: string;
   updatedAt: string;
 }

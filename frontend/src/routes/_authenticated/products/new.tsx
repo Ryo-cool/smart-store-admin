@@ -31,12 +31,17 @@ const productSchema = z.object({
   sku: z.string().min(1, 'SKUを入力してください'),
   price: z.number().min(0, '価格は0以上で入力してください'),
   stock: z.number().min(0, '在庫数は0以上で入力してください'),
-  description: z.string().optional(),
+  description: z.string().min(1, '商品説明を入力してください'),
   category: z.string().min(1, 'カテゴリーを選択してください'),
-  weight: z.string().optional(),
-  dimensions: z.string().optional(),
+  weight: z.string().min(1, '重量を入力してください'),
+  dimensions: z.string().min(1, 'サイズを入力してください'),
   status: z.enum(['販売中', '在庫切れ', '入荷待ち', '在庫少']),
-  images: z.array(z.string()).optional(),
+  images: z.array(z.string()).default([]),
+  co2Emission: z.number().min(0, 'CO2排出量は0以上で入力してください'),
+  recycleRate: z.number().min(0).max(100, 'リサイクル率は0-100%で入力してください'),
+  shelfLocation: z.string().min(1, '棚位置を入力してください'),
+  minStockLevel: z.number().min(0, '最小在庫レベルは0以上で入力してください'),
+  reorderPoint: z.number().min(0, '再注文ポイントは0以上で入力してください'),
 });
 
 type ProductForm = z.infer<typeof productSchema>;
@@ -254,6 +259,95 @@ export default function NewProductPage() {
                   <FormLabel>サイズ</FormLabel>
                   <FormControl>
                     <Input {...field} placeholder="例: 15 x 8 x 8 cm" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="shelfLocation"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>棚位置</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="例: A-01-03" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="minStockLevel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>最小在庫レベル</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="reorderPoint"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>再注文ポイント</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="co2Emission"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>CO2排出量 (kg)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="recycleRate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>リサイクル率 (%)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
